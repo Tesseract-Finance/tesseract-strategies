@@ -1,0 +1,14 @@
+# Brownie
+__pycache__
+.history
+.hypothesis/
+tricryptocurve/build/
+reports/
+.env
+
+# Node/npm
+node_modules/
+.DS_Store
+
+#ide
+.idea
