@@ -23,15 +23,15 @@ abstract contract StrategyCurveBase is BaseStrategy {
     // these should stay the same across different wants.
 
     // Curve stuff
-    IGauge public constant gauge = IGauge(0x3B6B158A76fd8ccc297538F454ce7B4787778c7C); // Curve gauge contract, tokenized, held by strategy
+    IGauge public constant gauge = IGauge(0x445FE580eF8d70FF569aB36e80c647af338db351); // Curve gauge contract, tokenized, held by strategy
 
     // keepCRV stuff
     address public voter;
     uint256 public keepCRV; // the percentage of CRV we re-lock for boost (in basis points)
     uint256 internal constant FEE_DENOMINATOR = 10000; // this means all of our fee values are in basis points
 
-    IERC20 internal constant crv = IERC20(0x172370d5Cd63279eFa6d502DAB29171933a610AF);
-    IERC20 internal constant wmatic = IERC20(0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270);
+    IERC20 internal constant crv = IERC20(0x249848BeCA43aC405b8102Ec90Dd5F22CA513c06);
+    IERC20 internal constant wavax = IERC20(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
 
     bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
 
@@ -134,18 +134,18 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
     // these will likely change across different wants.
 
     // Curve stuff
-    ICurveFi public constant curve = ICurveFi(0x1d8b86e3D88cDb2d34688e87E72F388Cb541B7C8); // This is our pool specific to this vault. In this case, it is a zap.
+    ICurveFi public constant curve = ICurveFi(0x58e57cA18B7A47112b877E31929798Cd3D703b0f); // This is our pool specific to this vault. In this case, it is a zap.
 
     // we use these to deposit to our curve pool
     address public targetToken; // this is the token we sell into, 0 DAI, 1 USDC, 2 USDT, 3 WBTC, 4 WETH
     uint256 public optimal = 2; // this is the token we sell into, 0 DAI, 1 USDC, 2 USDT, 3 WBTC, 4 WETH
-    IERC20 internal constant wbtc = IERC20(0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6);
-    IERC20 internal constant weth = IERC20(0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619);
-    IERC20 internal constant usdt = IERC20(0xc2132D05D31c914a87C6611C10748AEb04B58e8F);
-    IERC20 internal constant usdc = IERC20(0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174);
-    IERC20 internal constant dai = IERC20(0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063);
-    IUniswapV2Router02 internal mainRouter = IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); // this is the router we swap with except for CRV
-    IUniswapV2Router02 internal crvRouter = IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506); // this is the router we swap CRV with, Sushi
+    IERC20 internal constant wbtc = IERC20(0x50b7545627a5162F82A992c33b87aDc75187B218);
+    IERC20 internal constant weth = IERC20(0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB);
+    IERC20 internal constant usdt = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
+    IERC20 internal constant usdc = IERC20(0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664);
+    IERC20 internal constant dai = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
+    IUniswapV2Router02 internal mainRouter = IUniswapV2Router02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4); // this is the router we swap with except for CRV
+    IUniswapV2Router02 internal crvRouter = IUniswapV2Router02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4); // this is the router we swap CRV with, Sushi
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -157,7 +157,7 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
         // these are our standard approvals. want = Curve LP token
         want.approve(address(gauge), type(uint256).max);
         crv.approve(address(crvRouter), type(uint256).max);
-        wmatic.approve(address(mainRouter), type(uint256).max);
+        wavax.approve(address(mainRouter), type(uint256).max);
         weth.approve(address(mainRouter), type(uint256).max);
 
         // set our strategy's name
@@ -189,7 +189,7 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
         // harvest our rewards from the gauge
         gauge.claim_rewards();
         uint256 crvBalance = crv.balanceOf(address(this));
-        uint256 wmaticBalance = wmatic.balanceOf(address(this));
+        uint256 wavaxBalance = wavax.balanceOf(address(this));
 
         // if we claimed any CRV, then sell it
         if (crvBalance > 0 && voter != address(0)) {
@@ -203,9 +203,9 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
             crvBalance = crv.balanceOf(address(this));
         }
 
-        // sell our WMATIC and CRV if we have any
-        if (wmaticBalance > 0 || crvBalance > 0) {
-            _sell(wmaticBalance, crvBalance);
+        // sell our WAVAX and CRV if we have any
+        if (wavaxBalance > 0 || crvBalance > 0) {
+            _sell(wavaxBalance, crvBalance);
         }
 
         // deposit our balance to Curve if we have any
@@ -269,38 +269,23 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
         forceHarvestTriggerOnce = false;
     }
 
-    // Sells our CRV and/or WMATIC for our target token
-    function _sell(uint256 _wmaticBalance, uint256 _crvBalance) internal {
-        // sell our WMATIC directly to USDC or USDT if they're the targetToken, otherwise swap it for WETH
-        if (_wmaticBalance > 0) {
-            if (optimal == 1 || optimal == 2) {
-                address[] memory tokenPath = new address[](2);
-                tokenPath[0] = address(wmatic);
-                tokenPath[1] = address(targetToken);
-                IUniswapV2Router02(mainRouter).swapExactTokensForTokens(_wmaticBalance, uint256(0), tokenPath, address(this), block.timestamp);
-            } else {
-                address[] memory tokenPath = new address[](2);
-                tokenPath[0] = address(wmatic);
-                tokenPath[1] = address(weth);
-                IUniswapV2Router02(mainRouter).swapExactTokensForTokens(_wmaticBalance, uint256(0), tokenPath, address(this), block.timestamp);
-            }
+    // Sells our CRV and/or WAVAX for our target token
+    function _sell(uint256 _wavaxBalance, uint256 _crvBalance) internal {
+        // sell our WAVAX
+        if (_wavaxBalance > 0) {
+            address[] memory tokenPath = new address[](2);
+            tokenPath[0] = address(wavax);
+            tokenPath[1] = address(targetToken);
+            IUniswapV2Router02(mainRouter).swapExactTokensForTokens(_wavaxBalance, uint256(0), tokenPath, address(this), block.timestamp);
         }
 
-        // check for CRV balance and sell it on Sushi if we have any
+        // check for CRV balance and sell it if we have any
         if (_crvBalance > 0) {
             address[] memory tokenPath = new address[](2);
             tokenPath[0] = address(crv);
-            tokenPath[1] = address(weth);
+            tokenPath[1] = address(wavax);
+            tokenPath[2] = address(targetToken);
             IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_crvBalance, uint256(0), tokenPath, address(this), block.timestamp);
-        }
-
-        // check for WETH balance, if it's not our targetToken then swap it
-        uint256 wethBalance = weth.balanceOf(address(this));
-        if (wethBalance > 0) {
-            address[] memory tokenPath = new address[](2);
-            tokenPath[0] = address(weth);
-            tokenPath[1] = address(targetToken);
-            IUniswapV2Router02(mainRouter).swapExactTokensForTokens(wethBalance, uint256(0), tokenPath, address(this), block.timestamp);
         }
     }
 

@@ -11,7 +11,7 @@ def isolation(fn_isolation):
 def whale(accounts):
     # Totally in it for the tech
     # Update this with a large holder of your want token (the largest EOA holder of LP)
-    whale = accounts.at("0x25eeb8ab4e2f369c8f0e171d0701c06fa6a709dd", force=True)
+    whale = accounts.at("0x5b35d02ec6262b42bf0eceb1fdf9f7950d8055e1", force=True)
     yield whale
 
 
@@ -33,14 +33,14 @@ def strategy_name():
 @pytest.fixture(scope="module")
 def gauge():
     # this should be the address of the convex deposit token
-    gauge = "0x3B6B158A76fd8ccc297538F454ce7B4787778c7C"
+    gauge = "0x445FE580eF8d70FF569aB36e80c647af338db351"
     yield interface.IGauge(gauge)
 
 
 # curve deposit pool
 @pytest.fixture(scope="module")
 def pool():
-    poolAddress = Contract("0x1d8b86e3D88cDb2d34688e87E72F388Cb541B7C8")
+    poolAddress = Contract("0x58e57cA18B7A47112b877E31929798Cd3D703b0f")
     yield poolAddress
 
 
@@ -48,7 +48,7 @@ def pool():
 @pytest.fixture(scope="module")
 def token():
     # this should be the address of the ERC-20 used by the strategy/vault
-    token_address = "0xdAD97F7713Ae9437fa9249920eC8507e5FbB23d3"
+    token_address = "0x1daB6560494B04473A0BE3E7D83CF3Fdf3a51828"
     yield Contract(token_address)
 
 
@@ -58,27 +58,27 @@ def token():
 
 @pytest.fixture(scope="function")
 def voter():  # set this to polygon gov for now
-    yield Contract("0xd131Ff7caF3a2EdD4B1741dd8fC2F9A92A13cD25")
+    yield Contract("0xe263A668bf09d0122Fa7f7fB3a8Df61fC8DA95De")
 
 
 @pytest.fixture(scope="function")
 def crv():
-    yield Contract("0x172370d5Cd63279eFa6d502DAB29171933a610AF")
+    yield Contract("0x249848BeCA43aC405b8102Ec90Dd5F22CA513c06")
 
 
 @pytest.fixture(scope="module")
 def other_vault_strategy():
-    yield Contract("0xb1A092293290E60B288B2B75D83a1a086392C037")
+    yield Contract("0x4d57fb3bE0Fee8850D9C7d9030e87166a4a76B09")
 
 
 @pytest.fixture(scope="module")
 def farmed():
-    yield Contract("0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39")
+    yield Contract("0x5947BB275c521040051D82396192181b413227A3")
 
 
 @pytest.fixture(scope="module")
 def healthCheck():
-    yield Contract("0xf1e3dA291ae47FbBf625BB63D806Bf51f23A4aD2")
+    yield Contract("0x6fD0f710f30d4dC72840aE4e263c22d3a9885D3B")
 
 
 # zero address

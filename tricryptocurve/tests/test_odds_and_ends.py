@@ -83,6 +83,7 @@ def test_odds_and_ends(
     chain.mine(1)
 
     # Test out our migrated strategy, confirm we're making a profit
+    new_strategy.setDoHealthCheck(False, {"from": gov})
     new_strategy.harvest({"from": gov})
     vaultAssets_2 = vault.totalAssets()
     assert vaultAssets_2 >= startingVault
@@ -213,6 +214,7 @@ def test_odds_and_ends_migration(
     chain.mine(1)
 
     # Test out our migrated strategy, confirm we're making a profit
+    new_strategy.setDoHealthCheck(False, {"from": gov})
     new_strategy.harvest({"from": gov})
     vaultAssets_2 = vault.totalAssets()
     # confirm we made money, or at least that we have about the same
