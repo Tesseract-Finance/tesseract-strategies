@@ -281,7 +281,7 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
 
         // check for CRV balance and sell it if we have any
         if (_crvBalance > 0) {
-            address[] memory tokenPath = new address[](2);
+            address[] memory tokenPath = new address[](3);
             tokenPath[0] = address(crv);
             tokenPath[1] = address(wavax);
             tokenPath[2] = address(targetToken);
