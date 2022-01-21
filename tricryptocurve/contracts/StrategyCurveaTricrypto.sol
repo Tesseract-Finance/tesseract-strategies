@@ -14,18 +14,6 @@ import "./interfaces/yearn.sol";
 import {IUniswapV2Router02} from "./interfaces/uniswap.sol";
 import {BaseStrategy, StrategyParams} from "@tesrvaults/contracts/BaseStrategy.sol";
 
-interface IUniV3 {
-    struct ExactInputParams {
-        bytes path;
-        address recipient;
-        uint256 deadline;
-        uint256 amountIn;
-        uint256 amountOutMinimum;
-    }
-
-    function exactInput(ExactInputParams calldata params) external payable returns (uint256 amountOut);
-}
-
 abstract contract StrategyCurveBase is BaseStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
