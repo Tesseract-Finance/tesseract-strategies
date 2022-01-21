@@ -271,36 +271,21 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
 
     // Sells our CRV and/or WMATIC for our target token
     function _sell(uint256 _wmaticBalance, uint256 _crvBalance) internal {
-        // sell our WMATIC directly to USDC or USDT if they're the targetToken, otherwise swap it for WETH
+        // sell our WMATIC
         if (_wmaticBalance > 0) {
-            if (optimal == 1 || optimal == 2) {
-                address[] memory tokenPath = new address[](2);
-                tokenPath[0] = address(wmatic);
-                tokenPath[1] = address(targetToken);
-                IUniswapV2Router02(mainRouter).swapExactTokensForTokens(_wmaticBalance, uint256(0), tokenPath, address(this), block.timestamp);
-            } else {
-                address[] memory tokenPath = new address[](2);
-                tokenPath[0] = address(wmatic);
-                tokenPath[1] = address(weth);
-                IUniswapV2Router02(mainRouter).swapExactTokensForTokens(_wmaticBalance, uint256(0), tokenPath, address(this), block.timestamp);
-            }
-        }
-
-        // check for CRV balance and sell it on Sushi if we have any
-        if (_crvBalance > 0) {
             address[] memory tokenPath = new address[](2);
-            tokenPath[0] = address(crv);
-            tokenPath[1] = address(weth);
-            IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_crvBalance, uint256(0), tokenPath, address(this), block.timestamp);
-        }
-
-        // check for WETH balance, if it's not our targetToken then swap it
-        uint256 wethBalance = weth.balanceOf(address(this));
-        if (wethBalance > 0) {
-            address[] memory tokenPath = new address[](2);
-            tokenPath[0] = address(weth);
+            tokenPath[0] = address(wmatic);
             tokenPath[1] = address(targetToken);
-            IUniswapV2Router02(mainRouter).swapExactTokensForTokens(wethBalance, uint256(0), tokenPath, address(this), block.timestamp);
+            IUniswapV2Router02(mainRouter).swapExactTokensForTokens(_wmaticBalance, uint256(0), tokenPath, address(this), block.timestamp);
+        }
+
+        // check for CRV balance and sell it if we have any
+        if (_crvBalance > 0) {
+            address[] memory tokenPath = new address[](3);
+            tokenPath[0] = address(crv);
+            tokenPath[1] = address(wmatic);
+            tokenPath[2] = address(targetToken);
+            IUniswapV2Router02(crvRouter).swapExactTokensForTokens(_crvBalance, uint256(0), tokenPath, address(this), block.timestamp);
         }
     }
 
