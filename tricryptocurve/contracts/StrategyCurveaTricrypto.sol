@@ -26,6 +26,7 @@ abstract contract StrategyCurveBase is BaseStrategy {
     IGauge public constant gauge = IGauge(0x3B6B158A76fd8ccc297538F454ce7B4787778c7C); // Curve gauge contract, tokenized, held by strategy
 
     // keepCRV stuff
+    address public voter;
     uint256 public keepCRV; // the percentage of CRV we re-lock for boost (in basis points)
     uint256 internal constant FEE_DENOMINATOR = 10000; // this means all of our fee values are in basis points
 
@@ -112,10 +113,14 @@ abstract contract StrategyCurveBase is BaseStrategy {
 
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
 
-    // Set the amount of CRV to be locked in Yearn's veCRV voter from each harvest. Default is 10%.
+    // Set the amount of CRV to be locked in veCRV voter from each harvest. Default is 10%.
     function setKeepCRV(uint256 _keepCRV) external onlyAuthorized {
         require(_keepCRV <= 10_000);
         keepCRV = _keepCRV;
+    }
+
+    function setVoter(uint256 _voter) external onlyGovernance {
+        voter = _voter;
     }
 
     // This allows us to manually harvest with our keeper as needed
@@ -142,14 +147,12 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
     IUniswapV2Router02 internal mainRouter = IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); // this is the router we swap with except for CRV
     IUniswapV2Router02 internal crvRouter = IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506); // this is the router we swap CRV with, Sushi
 
-    address public constant voter = 0xD20Eb2390e675b000ADb8511F62B28404115A1a4; // sms, still need to set this, currently using my deployer as dummy********
-
     /* ========== CONSTRUCTOR ========== */
 
     constructor(address _vault, string memory _name) public StrategyCurveBase(_vault) {
         // You can set these parameters on deployment to whatever you want
         maxReportDelay = 2 days; // 2 days in seconds
-        healthCheck = 0xA67667199048E3857BCd4d0760f383D1BC421A26; // health.ychad.eth
+        healthCheck = 0xf1e3dA291ae47FbBf625BB63D806Bf51f23A4aD2;
 
         // these are our standard approvals. want = Curve LP token
         want.approve(address(gauge), type(uint256).max);
@@ -189,7 +192,7 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
         uint256 wmaticBalance = wmatic.balanceOf(address(this));
 
         // if we claimed any CRV, then sell it
-        if (crvBalance > 0) {
+        if (crvBalance > 0 && voter != address(0)) {
             // keep some of our CRV to increase our boost
             uint256 sendToVoter = crvBalance.mul(keepCRV).div(FEE_DENOMINATOR);
             if (keepCRV > 0) {
