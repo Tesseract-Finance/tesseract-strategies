@@ -52,6 +52,7 @@ def test_setters(
     strategy.setProfitFactor(1000, {"from": gov})
     strategy.setRewards(gov, {"from": strategist})
     strategy.setKeepCRV(10, {"from": gov})
+    strategy.setVoter(strategist, {"from": gov})
 
     strategy.setStrategist(strategist, {"from": gov})
     name = strategy.name()
@@ -86,6 +87,8 @@ def test_setters(
         strategy.setRewards(strategist, {"from": whale})
     with brownie.reverts():
         strategy.setKeepCRV(10_001, {"from": gov})
+    with brownie.reverts():
+        strategy.setVoter(gov, {"from": strategist})
 
     # try a health check with zero address as health check
     strategy.setHealthCheck(zero, {"from": gov})

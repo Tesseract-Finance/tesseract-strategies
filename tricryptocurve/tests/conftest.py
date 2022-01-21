@@ -78,7 +78,7 @@ def farmed():
 
 @pytest.fixture(scope="module")
 def healthCheck():
-    yield Contract("0xA67667199048E3857BCd4d0760f383D1BC421A26")
+    yield Contract("0xf1e3dA291ae47FbBf625BB63D806Bf51f23A4aD2")
 
 
 # zero address
@@ -168,6 +168,7 @@ def strategy(
     strategy_name,
     gauge,
     strategist_ms,
+    voter
 ):
     # make sure to include all constructor parameters needed here
     strategy = strategist.deploy(
@@ -182,6 +183,7 @@ def strategy(
     vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
     strategy.setHealthCheck(healthCheck, {"from": gov})
     strategy.setDoHealthCheck(True, {"from": gov})
+    strategy.setVoter(voter, {"from": gov})
     chain.sleep(1)
     strategy.harvest({"from": gov})
     chain.sleep(1)

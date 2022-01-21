@@ -119,7 +119,7 @@ abstract contract StrategyCurveBase is BaseStrategy {
         keepCRV = _keepCRV;
     }
 
-    function setVoter(uint256 _voter) external onlyGovernance {
+    function setVoter(address _voter) external onlyGovernance {
         voter = _voter;
     }
 
