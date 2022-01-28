@@ -30,7 +30,7 @@ abstract contract StrategyCurveBase is BaseStrategy {
     uint256 public keepCRV; // the percentage of CRV we re-lock for boost (in basis points)
     uint256 internal constant FEE_DENOMINATOR = 10000; // this means all of our fee values are in basis points
 
-    IERC20 internal constant crv = IERC20(0x249848BeCA43aC405b8102Ec90Dd5F22CA513c06);
+    IERC20 internal constant crv = IERC20(0x47536F17F4fF30e64A96a7555826b8f9e66ec468);
     IERC20 internal constant wavax = IERC20(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
 
     bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
@@ -151,7 +151,7 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
 
     constructor(address _vault, string memory _name) public StrategyCurveBase(_vault) {
         // You can set these parameters on deployment to whatever you want
-        maxReportDelay = 1 days; // 2 days in seconds
+        maxReportDelay = 1 days; // 1 day in seconds
         healthCheck = 0x6fD0f710f30d4dC72840aE4e263c22d3a9885D3B;
 
         // these are our standard approvals. want = Curve LP token
