@@ -151,7 +151,7 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
 
     constructor(address _vault, string memory _name) public StrategyCurveBase(_vault) {
         // You can set these parameters on deployment to whatever you want
-        maxReportDelay = 2 days; // 2 days in seconds
+        maxReportDelay = 1 days; // 1 days in seconds
         healthCheck = 0xf1e3dA291ae47FbBf625BB63D806Bf51f23A4aD2;
 
         // these are our standard approvals. want = Curve LP token

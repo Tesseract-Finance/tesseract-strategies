@@ -26,7 +26,7 @@ def test_triggers(
     chain.sleep(1)
 
     # simulate a day of earnings
-    chain.sleep(86400)
+    chain.sleep(86300)
     chain.mine(1)
 
     # harvest should trigger false; hasn't been long enough
