@@ -1,0 +1,30 @@
+{
+  "config": {
+    "reportsDirectory": "../reports/",
+    "reportFilename": "_totals.json",
+    "jsonSnapshotFilename": "_current.json",
+    "fleekNamespace": "balancer-claims",
+    "offset": 20,
+    "week": 87
+  },
+  "tokens_data": [
+    {
+      "address": "0x9cfF0533972da48Ac05a00a375CC1a65e87Da7eC",
+      "claim_amount": "4803468193280000000000",
+      "hex_proof": [
+        "0xdd13be284e63444bb00252d67731879d77271e4338bb56055e162417c9accee4",
+        "0x396fa0921fae556e7f636594d28073bb324ad7e3d561bb39731d83d95bbe13c3",
+        "0x01e9d7a837be491f367d9a6ba0dacd510fe07d8b740afc1516dd1b8969fbc38e",
+        "0x3791a3670d081e09d51274b1d81cceb18217e04dc82bb04807d95e602c915a13",
+        "0x9f95db1585620a35b0de3bee992083b06be266cfeeae057002cd5962f4ad620e",
+        "0xe8e5d03919b06ac43ba5f72206caee7ddcf325a5611a7d6ebcfd941f8eb63476",
+        "0xc17b46d7312dedba4e58c8dddea768c0ee172835b43c921cc3091e8eb2ddb270",
+        "0xfbdf3e08566cf2743b6a2718d5cf83783e7196fc917bea34c3b77fddc179928b",
+        "0x27e20d420f3c262aad25b7166cbc9412d54745e048b8a7685d576a5f139da4ff",
+        "0xf7eef79160b9459ad5d2ec2469374599582c53530f8333fbfbeefe463038569a",
+        "0x82c1b822d473da744e28edd6b4538a82f489a0c8d8ee8b1b3caafb5047968b6c",
+        "0x92ecd49cf021c804d2870ff1f1da49d3c8e6523b85677e3db1b34ce93aee80e5"
+      ]
+    }
+  ]
+}
