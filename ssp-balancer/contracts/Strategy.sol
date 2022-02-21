@@ -9,7 +9,7 @@ pragma experimental ABIEncoderV2;
 import {
     BaseStrategy,
     StrategyParams
-} from "@yearnvaults/contracts/BaseStrategy.sol";
+} from "@tesrvaults/contracts/BaseStrategy.sol";
 import {
     SafeERC20,
     SafeMath,
@@ -332,7 +332,7 @@ contract Strategy is BaseStrategy {
         returns (address[] memory)
     {}
 
-    function ethToWant(uint256 _amtInWei)
+    function nativeToWant(uint256 _amtInWei)
         public
         view
         override
