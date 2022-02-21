@@ -1,9 +1,7 @@
 from brownie import Contract
-def airdrop_rewards(strategy, bal, bal_whale, ldo, ldo_whale):
+def airdrop_rewards(strategy, bal, bal_whale):
     bal.approve(strategy, 2 ** 256 - 1, {'from': bal_whale})
     bal.transfer(strategy, 100 * 1e18, {'from': bal_whale})
-    ldo.approve(strategy, 2 ** 256 - 1, {'from': ldo_whale})
-    ldo.transfer(strategy, 100 * 1e18, {'from': ldo_whale})
 
 
 def stateOfStrat(msg, strategy, token):

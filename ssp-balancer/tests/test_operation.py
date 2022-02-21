@@ -46,8 +46,7 @@ def test_emergency_exit(
 
 
 def test_profitable_harvest(
-        chain, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal, bal_whale, ldo,
-        ldo_whale, management
+        chain, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal, bal_whale, management
 ):
     # Deposit to the vault
     token.approve(vault.address, amount, {"from": user})
@@ -60,7 +59,7 @@ def test_profitable_harvest(
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
     before_pps = vault.pricePerShare()
-    util.airdrop_rewards(strategy, bal, bal_whale, ldo, ldo_whale)
+    util.airdrop_rewards(strategy, bal, bal_whale)
 
     # Harvest 2: Realize profit
     chain.sleep(1)
@@ -73,9 +72,7 @@ def test_profitable_harvest(
     assert vault.pricePerShare() > before_pps
 
 
-def test_deposit_all(chain, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal, bal_whale,
-                     ldo, gov, pool,
-                     ldo_whale):
+def test_deposit_all(chain, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal, bal_whale, gov, pool):
     # Deposit to the vault
     token.approve(vault.address, amount, {"from": user})
     vault.deposit(amount, {"from": user})
@@ -97,7 +94,7 @@ def test_deposit_all(chain, token, vault, strategy, user, strategist, amount, RE
         chain.mine(1)
 
     before_pps = vault.pricePerShare()
-    util.airdrop_rewards(strategy, bal, bal_whale, ldo, ldo_whale)
+    util.airdrop_rewards(strategy, bal, bal_whale)
 
     # Harvest 2: Realize profit
     chain.sleep(1)
@@ -121,7 +118,7 @@ def test_deposit_all(chain, token, vault, strategy, user, strategist, amount, RE
 
 
 def test_change_debt(
-        chain, gov, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal, bal_whale, ldo, ldo_whale
+        chain, gov, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal, bal_whale
 ):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": user})
@@ -139,7 +136,7 @@ def test_change_debt(
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
     util.stateOfStrat("before airdrop", strategy, token)
-    util.airdrop_rewards(strategy, bal, bal_whale, ldo, ldo_whale)
+    util.airdrop_rewards(strategy, bal, bal_whale)
     util.stateOfStrat("after airdrop", strategy, token)
 
     vault.updateStrategyDebtRatio(strategy.address, 5_000, {"from": gov})
@@ -193,8 +190,7 @@ def test_eth_sweep(chain, token, vault, strategy, user, strategist, gov):
     assert gov.balance() > eth_balance
 
 def test_triggers(
-        chain, gov, vault, strategy, token, amount, user, weth, weth_amout, strategist, bal, bal_whale, ldo, ldo_whale,
-        token_whale
+        chain, gov, vault, strategy, token, amount, user, weth, weth_amout, strategist, bal, bal_whale, token_whale
 ):
     # Deposit to the vault and harvest
     token.approve(vault.address, amount, {"from": user})
@@ -206,6 +202,7 @@ def test_triggers(
     assert strategy.tendTrigger(0) == False
     chain.sleep(strategy.minDepositPeriod() + 1)
     chain.mine(1)
+    print(strategy.balanceOfWant())
     assert strategy.tendTrigger(0) == True
 
 
@@ -213,15 +210,14 @@ def test_rewards(
         strategy, strategist, gov
 ):
     # added in setup
-    assert strategy.numRewards() == 2
+    assert strategy.numRewards() == 1
     strategy.delistAllRewards({'from': gov})
     assert strategy.numRewards() == 0
 
 def test_unbalance_deposit(chain, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal,
-                                  bal_whale, token2_whale, token2, usdc_whale,
-                                  ldo, gov, pool, balancer_vault):
+                                  bal_whale, token2_whale, token2, usdc_whale, gov, pool, balancer_vault):
     # added in setup
-    assert strategy.numRewards() == 2
+    assert strategy.numRewards() == 1
     strategy.delistAllRewards({'from': gov})
     assert strategy.numRewards() == 0
 
@@ -250,20 +246,19 @@ def test_unbalance_deposit(chain, token, vault, strategy, user, strategist, amou
                 False,          # fromInternalBalance
                 usdc_whale,     # recipient
                 False           # toInternalBalance
-            ), 
+            ),
             token.balanceOf(usdc_whale),   # token limit
             2**256-1,                   # Deadline
             {'from': usdc_whale}
     )
-    print(f'pool rate after whale swap: {pool.getRate()}')  
+    print(f'pool rate after whale swap: {pool.getRate()}')
 
     with brownie.reverts("BAL#208"):
         tx = strategy.harvest({"from": strategist}) # Error Code BAL#208 BPT_OUT_MIN_AMOUNT - Slippage/front-running protection check failed on a pool join
 
 
 def test_unbalanced_pool_withdraw(chain, token, vault, strategy, user, strategist, amount, RELATIVE_APPROX, bal,
-                                  bal_whale, token2_whale, token2,
-                                  ldo, gov, pool, balancer_vault):
+                                  bal_whale, token2_whale, token2, gov, pool, balancer_vault):
     # Deposit to the vault
     token.approve(vault.address, amount, {"from": user})
     vault.deposit(amount, {"from": user})
@@ -305,8 +300,14 @@ def test_unbalanced_pool_withdraw(chain, token, vault, strategy, user, strategis
     # simulate bad pool state by whale to swap out 98% of one side of the pool so pool only has 2% of the original want
     token2.approve(balancer_vault, 2 ** 256 - 1, {'from': token2_whale})
     singleSwap = (pool.getPoolId(), 1, token2, token, pooled * 0.98, b'0x0')
-    balancer_vault.swap(singleSwap, (token2_whale, False, token2_whale, False), token2.balanceOf(token2_whale),
-                        chain.time(), {'from': token2_whale})
+    balancer_vault.swap(
+        singleSwap,
+        (token2_whale, False, token2_whale, False),
+        token2.balanceOf(token2_whale),
+        2**256-1,
+        {'from': token2_whale}
+    )
+
     print(balancer_vault.getPoolTokens(pool.getPoolId()))
     print(f'pool rate: {pool.getRate()}')
 
