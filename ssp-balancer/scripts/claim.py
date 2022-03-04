@@ -7,18 +7,20 @@ import os
 
 def main():
     dev = accounts.load(click.prompt("Account", type=click.Choice(accounts.load())))
-    merkleOrchard = Contract("0xdAE7e32ADc5d490a43cCba1f0c736033F2b4eFca")
-    bal = "0xba100000625a3754423978a60c9317c58a424e3D"
-    ldo = "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32"
+    merkleOrchard = Contract("0x0F3e0c4218b7b0108a3643cFe9D3ec0d4F57c54e")
+
+    bal = "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3"
+    tusd = "0x2e1AD108fF1D8C782fcBbB89AAd783aC49586756"
+
     bal_distributor = "0xd2EB7Bd802A7CA68d9AcD209bEc4E664A9abDD7b"
-    # ldo_distributor = "" use legacy claim. Orchard not set up yet for ldo
-    rewards = [("homestead.json", bal, bal_distributor, "BAL")]
-    # ("homestead-lido.json", ldo, ldo_distributor, "LDO")
+    tusd_distributor = "0xc38c5f97B34E175FFd35407fc91a937300E33860"
+
+    rewards = [("polygon_", bal, bal_distributor, "BAL"), ("polygon-tusd_", tusd, tusd_distributor, "TUSD")]
 
     for reward in rewards:
         for root, dirs, files in os.walk(f'./scripts'):
             for name in files:
-                if name.startswith(("homestead_", ".json")):
+                if name.startswith(reward[0]):
                     fileName = os.path.join(root, name)
                     f = open(fileName, )
                     data = json.load(f)
@@ -39,8 +41,8 @@ def main():
                                   reward[2],
                                   0,
                                   token_data["hex_proof"])]
-                        claimed = merkleOrchard.isClaimed(bal, bal_distributor, distributionId, token_data["address"])
+                        claimed = merkleOrchard.isClaimed(reward[1], reward[2], distributionId, token_data["address"])
                         print(f"claimed: {claimed}")
                         if not claimed:
-                            merkleOrchard.claimDistributions(token_data["address"], claim, [reward[1]], {'from': dev})
+                            tx = merkleOrchard.claimDistributions(token_data["address"], claim, [reward[1]], {'from': dev})
                             print(f'{name} claimed {int(token_data["claim_amount"]) / 1e18} {reward[3]} ')
