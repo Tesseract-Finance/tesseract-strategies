@@ -1,0 +1,10 @@
+__pycache__
+.history
+.hypothesis/
+build/
+reports/
+@yearnvaults/
+node_modules/
+@openzeppelin/
+.DS_Store
+.nvmrc
