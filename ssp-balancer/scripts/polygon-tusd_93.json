@@ -1,0 +1,44 @@
+{
+  "config": {
+    "reportsDirectory": "../reports/",
+    "reportFilename": "/__polygon_0x2e1ad108ff1d8c782fcbbb89aad783ac49586756.json",
+    "jsonSnapshotFilename": "_current-tusd-polygon.json",
+    "fleekNamespace": "balancer-claims-tusd-polygon",
+    "offset": 76,
+    "week": 93
+  },
+  "tokens_data": [
+    {
+      "address": "0x006862eDbBDb825CAAAe1354FB07242089F46C38",
+      "claim_amount": "130722596810000000000",
+      "hex_proof": [
+        "0xd92b558d946314ca3546f41e590253669638a2afc187399599319b4d169463f0",
+        "0x6877cc30f08d0533be9bce37f97459fd1bb698773ddcae86c9c7fba94f3a5c9e",
+        "0x55edf41aafcca3f2979ec2a1c752fc404bfbfd92bb1352cb863201fdc6ff1268",
+        "0xf594f024bd3f6f133569e49de4b091d9db81973378a85c34943bb60310d9dd97",
+        "0x337d170ffc06f2cf86d471403c986e1633779dc14b2e7be77d8c33dab8876340",
+        "0x78a3fc838acdf7ce83a24c524ec3cad960a3cd899e2c65673111fbecc3202081",
+        "0x3ced2b61f2de1b3b5d2b80f67b93a2a88f735745ca420bcb28187e1f8aae0e5f",
+        "0x84dd31ce5878336e317532ac9093493ed88c815c31e2a592c6e70caea74d109c",
+        "0x04cf3e04b9c28fab8ddbc739cc40ff595901ac4fdda09c67167054f18b0516c2"
+      ]
+    },
+    {
+      "address": "0xD0B30cEEfCCcdB0DcA26e79029758B5f3eEEd6E2",
+      "claim_amount": "152374401620000000000",
+      "hex_proof": [
+        "0x53db6a209f707f49473b5e3630358ecd5275ee13a0b293a08d2e95504dcbaa67",
+        "0x7878e3b90c4ec1a141cedba0fc85cd242aae4422f1a62e84b86d6f6fecb5101f",
+        "0xc4b025e9f56d1252f629b3be9a116c17d32ccdaaff6ad30e1b1fbcaf565bbdf3",
+        "0xc5da41f412e6a20b2e2433a0866687cef59b17f6b92d29a30402413f13ac4501",
+        "0x674d36229f24a00c3c601dd0806b853672ce7fccb5b02520930133e09d555e0c",
+        "0xd54f2305f8361ceb5e945de149998305de850bb786ee5b6f0acc09db8105e0f2",
+        "0x50ba26ea875eb3251922add505fb2a26404dee347225a6d0f0cc818c85fddd38",
+        "0xd5218edbaf765845ff01778fa51755dff583e69cfb68468b9be28ce2bbeabdcc",
+        "0xec77cfa65f81297571421ba8d314cba82cbb16b8983289d1069ed0b405815ac4",
+        "0xb1bb4dfe40ec85072ea19e13f54055272ffff44d1c368998ca3a5f66d2c2bb48",
+        "0x02a9b05da93033e3a9fe4d856337fcdc6d7f9789094145377a53f5bc620e4234"
+      ]
+    }
+  ]
+}
