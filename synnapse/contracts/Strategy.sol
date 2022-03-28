@@ -8,7 +8,7 @@ import "./interfaces/erc20/IERC20Extended.sol";
 import "./interfaces/IWETH.sol";
 
 // These are the core Yearn libraries
-import "@yearnvaults/contracts/BaseStrategy.sol";
+import "@tesrvaults/contracts/BaseStrategy.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -33,9 +33,9 @@ contract Strategy is BaseStrategy {
     ICrvV3 public curveToken;
 
     IWETH public constant weth =
-        IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+        IWETH(0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270);
     address public constant uniswapRouter =
-        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+        0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff;
 
     VaultAPI public yvToken;
     uint256 public lastInvest; // default is 0
@@ -49,10 +49,8 @@ contract Strategy is BaseStrategy {
     uint8 private want_decimals;
     uint8 private middle_decimals;
 
-    int128 public curveId;
+    uint8 public curveId;
     uint256 public poolSize;
-    bool public hasUnderlying;
-    address public metaToken;
     bool public withdrawProtection;
 
     constructor(
@@ -64,8 +62,6 @@ contract Strategy is BaseStrategy {
         address _curveToken,
         address _yvToken,
         uint256 _poolSize,
-        address _metaToken,
-        bool _hasUnderlying,
         string memory _strategyName
     ) public BaseStrategy(_vault) {
         _initializeStrat(
@@ -76,8 +72,6 @@ contract Strategy is BaseStrategy {
             _curveToken,
             _yvToken,
             _poolSize,
-            _metaToken,
-            _hasUnderlying,
             _strategyName
         );
     }
@@ -92,8 +86,6 @@ contract Strategy is BaseStrategy {
         address _curveToken,
         address _yvToken,
         uint256 _poolSize,
-        address _metaToken,
-        bool _hasUnderlying,
         string memory _strategyName
     ) external {
         //note: initialise can only be called once. in _initialize in BaseStrategy we have: require(address(want) == address(0), "Strategy already initialized");
@@ -106,8 +98,6 @@ contract Strategy is BaseStrategy {
             _curveToken,
             _yvToken,
             _poolSize,
-            _metaToken,
-            _hasUnderlying,
             _strategyName
         );
     }
@@ -120,8 +110,6 @@ contract Strategy is BaseStrategy {
         address _curveToken,
         address _yvToken,
         uint256 _poolSize,
-        address _metaToken,
-        bool _hasUnderlying,
         string memory _strategyName
     ) internal {
         require(want_decimals == 0, "Already Initialized");
@@ -129,59 +117,23 @@ contract Strategy is BaseStrategy {
 
         curvePool = ICurveFi(_curvePool);
 
-        if (_metaToken != address(0)) {
-            basePool = ICurveFi(curvePool.pool());
-            metaToken = _metaToken;
-
-            for (uint256 i = 0; i < _poolSize; i++) {
-                if (i == 0) {
-                    if (curvePool.coins(0) == address(want)) {
-                        require(false, "ONLY USE META FOR BASE");
-                    }
-                } else {
-                    if (curvePool.base_coins(i - 1) == address(want)) {
-                        curveId = int128(i);
-                        break;
-                    }
-                }
-                if (i == _poolSize - 1) {
-                    // doesnt matter if it overflows
-                    require(false, "incorrect want for curve pool");
-                }
-            }
-        } else if (isWantWETH()) {
+        if (isWantWETH()) {
             // Case where our want is ETH
             basePool = ICurveFi(_curvePool);
             require(
-                curvePool.coins(0) ==
+                curvePool.getToken(0) ==
                     address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE)
             );
             curveId = 0;
         } else {
             basePool = ICurveFi(_curvePool);
-            if (
-                curvePool.coins(0) == address(want) ||
-                (_hasUnderlying &&
-                    curvePool.underlying_coins(0) == address(want))
-            ) {
+            if (curvePool.getToken(0) == address(want)) {
                 curveId = 0;
-            } else if (
-                curvePool.coins(1) == address(want) ||
-                (_hasUnderlying &&
-                    curvePool.underlying_coins(1) == address(want))
-            ) {
+            } else if (curvePool.getToken(1) == address(want)) {
                 curveId = 1;
-            } else if (
-                curvePool.coins(2) == address(want) ||
-                (_hasUnderlying &&
-                    curvePool.underlying_coins(2) == address(want))
-            ) {
+            } else if (curvePool.getToken(2) == address(want)) {
                 curveId = 2;
-            } else if (
-                curvePool.coins(3) == address(want) ||
-                (_hasUnderlying &&
-                    curvePool.underlying_coins(3) == address(want))
-            ) {
+            } else if (curvePool.getToken(3) == address(want)) {
                 //will revert if there are not enough coins
                 curveId = 3;
             } else {
@@ -194,7 +146,6 @@ contract Strategy is BaseStrategy {
         slippageProtectionIn = _slippageProtectionIn;
         slippageProtectionOut = _slippageProtectionIn; // use In to start with to save on stack
         poolSize = _poolSize;
-        hasUnderlying = _hasUnderlying;
         strategyName = _strategyName;
 
         yvToken = VaultAPI(_yvToken);
@@ -215,15 +166,6 @@ contract Strategy is BaseStrategy {
             want.safeApprove(address(curvePool), type(uint256).max);
         }
 
-        //deposit contract needs permissions
-        if (metaToken != address(0)) {
-            IERC20(metaToken).safeApprove(
-                address(curvePool),
-                type(uint256).max
-            );
-            curveToken.approve(address(curvePool), type(uint256).max);
-        }
-
         curveToken.approve(address(yvToken), type(uint256).max);
     }
 
@@ -239,8 +181,6 @@ contract Strategy is BaseStrategy {
         address _curveToken,
         address _yvToken,
         uint256 _poolSize,
-        address _metaToken,
-        bool _hasUnderlying,
         string memory _strategyName
     ) external returns (address payable newStrategy) {
         bytes20 addressBytes = bytes20(address(this));
@@ -270,8 +210,6 @@ contract Strategy is BaseStrategy {
             _curveToken,
             _yvToken,
             _poolSize,
-            _metaToken,
-            _hasUnderlying,
             _strategyName
         );
 
@@ -345,7 +283,7 @@ contract Strategy is BaseStrategy {
 
     // we lose some precision here. but it shouldnt matter as we are underestimating
     function virtualPriceToWant() public view returns (uint256) {
-        uint256 virtualPrice = basePool.get_virtual_price();
+        uint256 virtualPrice = basePool.getVirtualPrice();
 
         if (want_decimals < 18) {
             return virtualPrice.div(10**(uint256(uint8(18) - want_decimals)));
@@ -421,7 +359,12 @@ contract Strategy is BaseStrategy {
         (_amountFreed, ) = liquidatePosition(1e36); //we can request a lot. dont use max because of overflow
     }
 
-    function ethToWant(uint256 _amount) public view override returns (uint256) {
+    function nativeToWant(uint256 _amount)
+        public
+        view
+        override
+        returns (uint256)
+    {
         address[] memory path = new address[](2);
         path[0] = address(weth);
         path[1] = address(want);
@@ -455,39 +398,23 @@ contract Strategy is BaseStrategy {
             weth.withdraw(_wantToInvest);
             uint256[2] memory amounts;
             amounts[0] = _wantToInvest;
-            if (hasUnderlying) {
-                curvePool.add_liquidity{value: _wantToInvest}(
-                    amounts,
-                    maxSlip,
-                    true
-                );
-            } else {
-                curvePool.add_liquidity{value: _wantToInvest}(amounts, maxSlip);
-            }
+            curvePool.addLiquidity{value: _wantToInvest}(
+                amounts,
+                maxSlip,
+                block.timestamp
+            );
         } else if (poolSize == 2) {
             uint256[2] memory amounts;
-            amounts[uint256(curveId)] = _wantToInvest;
-            if (hasUnderlying) {
-                curvePool.add_liquidity(amounts, maxSlip, true);
-            } else {
-                curvePool.add_liquidity(amounts, maxSlip);
-            }
+            amounts[curveId] = _wantToInvest;
+            curvePool.addLiquidity(amounts, maxSlip, block.timestamp);
         } else if (poolSize == 3) {
             uint256[3] memory amounts;
-            amounts[uint256(curveId)] = _wantToInvest;
-            if (hasUnderlying) {
-                curvePool.add_liquidity(amounts, maxSlip, true);
-            } else {
-                curvePool.add_liquidity(amounts, maxSlip);
-            }
+            amounts[curveId] = _wantToInvest;
+            curvePool.addLiquidity(amounts, maxSlip, block.timestamp);
         } else {
             uint256[4] memory amounts;
-            amounts[uint256(curveId)] = _wantToInvest;
-            if (hasUnderlying) {
-                curvePool.add_liquidity(amounts, maxSlip, true);
-            } else {
-                curvePool.add_liquidity(amounts, maxSlip);
-            }
+            amounts[curveId] = _wantToInvest;
+            curvePool.addLiquidity(amounts, maxSlip, block.timestamp);
         }
 
         //now add to yearn
@@ -569,20 +496,12 @@ contract Strategy is BaseStrategy {
                 );
             }
 
-            if (hasUnderlying) {
-                curvePool.remove_liquidity_one_coin(
-                    toWithdraw,
-                    curveId,
-                    maxSlippage,
-                    true
-                );
-            } else {
-                curvePool.remove_liquidity_one_coin(
-                    toWithdraw,
-                    curveId,
-                    maxSlippage
-                );
-            }
+            curvePool.removeLiquidityOneToken(
+                toWithdraw,
+                curveId,
+                maxSlippage,
+                block.timestamp
+            );
 
             if (isWantWETH()) {
                 weth.deposit{value: address(this).balance}();
