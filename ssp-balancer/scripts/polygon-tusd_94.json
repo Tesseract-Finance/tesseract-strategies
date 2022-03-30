@@ -1,0 +1,47 @@
+{
+  "config": {
+    "token": "TUSD",
+    "reportsDirectory": "../reports/",
+    "reportFilename": "/__polygon_0x2e1ad108ff1d8c782fcbbb89aad783ac49586756.json",
+    "jsonSnapshotFilename": "_current-tusd-polygon.json",
+    "fleekNamespace": "balancer-claims-tusd-polygon",
+    "offset": 76,
+    "week": 94
+  },
+  "tokens_data": [
+    {
+      "address": "0x006862eDbBDb825CAAAe1354FB07242089F46C38",
+      "claim_amount": "147860242730000000000",
+      "hex_proof": [
+        "0xd474d3846db962584bc9820170978e52f03dc0eeb664bde572a64d51ffc0559d",
+        "0xc5b9441599b9bcd14ffc657c1775563dc820a324b8cfb4cc93f2aa9d48aed268",
+        "0x1ce50f788c3aad1e083afbc1c163bcf5502440d5a24b1a569ad14be74a565d6d",
+        "0x6170724dfda6edc08becd10078c92d8a41205cfba4acbe57e9b38c814cc735f5",
+        "0xe155d8b83bed28e075c6211cc1cb17d4351bf1fecf42eedbca5fb503e17af262",
+        "0x560259bdcd69ba21e32bc7479b37a1e7ebe0a9bf92baaf6c24a5dd86f4dd8f1e",
+        "0x6cbedeebab40260200f6d60f0a74a4d32b54fba70e23c04068478db22c470c9a",
+        "0x5c01cfaf2aa598f29e3dbd3c7ae418034931238eea6d6d710f980c29112f5714",
+        "0xbb3a06f7d40ff727d250cc3a3b6580abc0edad4556d953f1fac43e68fbac71f9",
+        "0xf5b7811575e45c5db3d85510f520ed0a135d23bd32570e7031c1ee87d6d6f6cb",
+        "0xb5496cd650399b2b02320017b441338d55a3f8bd1716cf8f9b5a92338b4fb391"
+      ]
+    },
+    {
+      "address": "0xD0B30cEEfCCcdB0DcA26e79029758B5f3eEEd6E2",
+      "claim_amount": "250839790810000000000",
+      "hex_proof": [
+        "0x340de22d90d791a4c22e93c586eeb8783ee9875332e5444d359a92967a24f19b",
+        "0x2518b7d1fd9e6ec79888c387d74c3cf95467de8761290ea9e86759ba3fd7eb09",
+        "0xad88ea50dbb5f3cf1c58e436ec27ca872b6ae6b1ce5f055b64fdde7d13f62900",
+        "0x80039344d6fee302b2946a3e3eb6e056f5a72587080cf50f5c3f0d1d2b85abe1",
+        "0x2a388d6000c15bd818226be802ee77b1f51d1993604c5a3508ffdf67eb7a69b7",
+        "0xb4f17d295b2afef5b42c9bd259f501e5ffad91aa5dee51f97222ddd3d8784193",
+        "0x2cf938145b5817e6b0bf5443852e90413fcbe4a51371229e62d752458270b8c6",
+        "0x21dd59040d90f80d7b45d7818b3145da32cb759a3a3aba824e8bb8aa22ce0902",
+        "0x96df58ede7eb1255c669e57ef1920d0a6a2ec7fa087367248603d96c7c13c597",
+        "0x58c2d79f3b466a263196511c65150a8f9a824ba5a485b79b7f8b4189702c7401",
+        "0xb5496cd650399b2b02320017b441338d55a3f8bd1716cf8f9b5a92338b4fb391"
+      ]
+    }
+  ]
+}

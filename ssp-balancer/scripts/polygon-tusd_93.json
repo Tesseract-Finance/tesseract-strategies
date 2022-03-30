@@ -1,5 +1,6 @@
 {
   "config": {
+    "token": "TUSD",
     "reportsDirectory": "../reports/",
     "reportFilename": "/__polygon_0x2e1ad108ff1d8c782fcbbb89aad783ac49586756.json",
     "jsonSnapshotFilename": "_current-tusd-polygon.json",

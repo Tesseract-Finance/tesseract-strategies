@@ -28,7 +28,7 @@ def main():
                     tokens_data = data["tokens_data"]
                     distributionId = config["week"] - config["offset"]
 
-                    print(f'Week: {config["week"]}')
+                    print(f'Week: {config["week"]}; Token to claim: {config["token"]}')
                     for token_data in tokens_data:
                         name = ""
                         try:
