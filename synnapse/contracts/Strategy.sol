@@ -167,6 +167,7 @@ contract Strategy is BaseStrategy {
         }
 
         curveToken.approve(address(yvToken), type(uint256).max);
+        curveToken.approve(address(curvePool), type(uint256).max);
     }
 
     event Cloned(address indexed clone);
@@ -365,6 +366,10 @@ contract Strategy is BaseStrategy {
         override
         returns (uint256)
     {
+        if (_amount == 0) {
+            return _amount;
+        }
+
         address[] memory path = new address[](2);
         path[0] = address(weth);
         path[1] = address(want);
@@ -374,6 +379,8 @@ contract Strategy is BaseStrategy {
 
         return amounts[amounts.length - 1];
     }
+
+    event Log(uint256[] tokenAmounts, uint256 maxSlipp, uint256 deadline);
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
         if (lastInvest.add(minTimePerInvest) > block.timestamp) {
@@ -403,17 +410,10 @@ contract Strategy is BaseStrategy {
                 maxSlip,
                 block.timestamp
             );
-        } else if (poolSize == 2) {
-            uint256[2] memory amounts;
-            amounts[curveId] = _wantToInvest;
-            curvePool.addLiquidity(amounts, maxSlip, block.timestamp);
-        } else if (poolSize == 3) {
-            uint256[3] memory amounts;
-            amounts[curveId] = _wantToInvest;
-            curvePool.addLiquidity(amounts, maxSlip, block.timestamp);
         } else {
-            uint256[4] memory amounts;
+            uint256[] memory amounts = new uint256[](poolSize);
             amounts[curveId] = _wantToInvest;
+            emit Log(amounts, maxSlip, block.timestamp);
             curvePool.addLiquidity(amounts, maxSlip, block.timestamp);
         }
 
