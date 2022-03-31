@@ -1,0 +1,33 @@
+{
+  "config": {
+    "token": "BAL",
+    "reportsDirectory": "../reports/",
+    "reportFilename": "/__polygon_0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3.json",
+    "jsonSnapshotFilename": "_current-polygon.json",
+    "fleekNamespace": "balancer-claims-polygon",
+    "offset": 71,
+    "week": 94
+  },
+  "tokens_data": [
+    {
+      "address": "0xe27FA1C2AE51aEEFD67E0c70Baf59090F719034e",
+      "claim_amount": "2221277020000000000",
+      "hex_proof": [
+        "0x2b98f5755a604fb017762d33cc1d750f9d2035a63deda7fc69c1fcf23db6caea",
+        "0xc31648e9c1a8e67dbd0c2ab9d61b05a3cff361392e184ac176226f46124df4e6",
+        "0xc9a3415a60788b7ad1b42c1ed8282a014c58fc044bd6ee41f7ac909e8887830b",
+        "0xa3d0769519e61604f9aabbcc5b80a7a937076a0c4879ac62fe52970513909d16",
+        "0x83999b674360f5215664e5ee14f8c003eeb6280fe900e1a2254df7b76c8be246",
+        "0x7f6355551908b63847b48a8a00e5c4bc6f30cb37c9e8a8e35102194fbbbc038b",
+        "0x9818c8f0a7478e79b0eeee3f76b976e5dd16c21087b054b6a9f0d73228eed3e2",
+        "0xa36724645174ff5c0ee06d348f9e2b536b84ff90c0a5e2431aed2e45d37db34f",
+        "0xfe43a8cea7922f876431ae705a4b04e9c9f99b96b3bd8a7917ba8b0b6e044a86",
+        "0x708df869a96293adf8e94c130053babe46a7cb1faf8a5c1dbb4919bf1c4d1468",
+        "0x7d33927187bc0e4be3b86c24c48611a8f5aa606668c1b4a249bbb6b96295cbaa",
+        "0x395794df4e388b2564f1643243cbbfc0a1a9496c4b3f99f45abfad9b8945dc86",
+        "0x052dd8cda0ce96175c467cdd16b72303a028d619f59ed631ebd10e98c31f2cf7",
+        "0x8becbb3f7901a1ea7764c1c03ab8a639aadcf4ae55c7e4952d0a9c70c6218b61"
+      ]
+    }
+  ]
+}

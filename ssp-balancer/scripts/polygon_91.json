@@ -1,0 +1,53 @@
+{
+  "config": {
+    "token": "BAL",
+    "reportsDirectory": "../reports/",
+    "reportFilename": "/__polygon_0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3.json",
+    "jsonSnapshotFilename": "_current-polygon.json",
+    "fleekNamespace": "balancer-claims-polygon",
+    "offset": 71,
+    "week": 91
+  },
+  "tokens_data": [
+    {
+      "address": "0xc72C2295fa0c65EE235190fE263A44cEe732d1bb",
+      "claim_amount": "2189310000000000",
+      "hex_proof": [
+        "0x4461098799e8914b47e14f1c4adb9e3cae896b89c86592bbdfe42de68be48320",
+        "0x7edf6b73a22488191f29166a6c0667b03748ee6f9be0f5fca816e302bd91a01a",
+        "0x3ecf95f8726ddc31ff6f0ea2e350decd505fe01f2f27938ff7ce5ea10c295a9e",
+        "0x315916ae1c0ca957477c6d6303fa90820e6f50bca1d397a5ab9884df9bf42094",
+        "0x3b854b972631418546e4c028aa9b2292740266cde9e5e0885b5155265a14ea49",
+        "0x2e7ade2aef3b5efc25a436744d9338aec269a256c340abf49069395b1c64f907",
+        "0x11f9407306e5e7c0ec1ddcb95c073e7c2484ab0c208b19af0937164a34763e59",
+        "0xaae5614e04450ef885ab1aab0c49a1b10d3d0772cd2bef73f3275b714421a719",
+        "0x12cd4ae9efa3744c1c7984aeb6a200733e89dd9fdf1a20af4c00b1d22b779b35",
+        "0xc55072938a65528732137584ba5d203a7faa4ab95bebfcc36014ced6ce23b92c",
+        "0x8ba13399b695919f88cdc4f9a210a6195eb6c62d41b115d8ff045ac962cd558f",
+        "0x4cef2f28726557c247a6ff15e80d7f25e59ff76515fe5ef25fc42a2729511cca",
+        "0xd9f479db485bbe25a94cb644601a58c7958f0db83c21643e5eef311257f99cba",
+        "0xd8c31cae8e422ef1211a535c56bad0edd3dea2173fda14ac9197d833ddea9731"
+      ]
+    },
+    {
+      "address": "0xDF95eeF8BaedD586EBac5070578850eFD6929B63",
+      "claim_amount": "2188820000000000",
+      "hex_proof": [
+        "0xb8e97dd52eca2d4f6c20e0ff2dd1af5c5db38b2d69b594f801ad3968cdf63e85",
+        "0x4fe846f97230e9b7042a21fa6adf926e9d912c2b18d18eda692149c0e632a22b",
+        "0x7e4a54705f3836a07162b4461c7113a4cdd1ef8e3e8aff27948aa643ae752520",
+        "0x5807cb5ac5fe01aff8b2620495e9ddbafd712819a15f9bd6411c840dbf6fa492",
+        "0x4196b0c5a3ec40a28f9117aa79a454f125752167592602a51fd5b8085077b5fc",
+        "0xd782e45731d886e14f80854910b7433f9a2b89be10ad17319b6e8f57cdd2d34a",
+        "0xf372d2d18b5f1da8324aedb7ef5a23a59583b4438dba47295378350e5c1f7cc2",
+        "0x9fa5f0be5b50cd7e317f0de260a96eec5fa9b9d5662d1871bf08b1fa7df1373f",
+        "0xb570bb23fe63f5d302cd15ef3831fc4a05c8ab1a2f90c7f5497fbfb4fc150432",
+        "0x2ed568d10724c2c802efadf2b92ae6b7119dc8b1165bd3397223871e294150e1",
+        "0x410a9d6f48e9deef9f0fbbc47dadecfe30671d36c6da133f847a7978f4c42447",
+        "0x2f6af0bccaf0b22952d7813ed0a612471ab0e20db2ac21b864aedf0880f721de",
+        "0x60dea3b9f22fd1c2e2bc45608cfb0d4582a1ac49b1f1f5128add97c4f15f86bc",
+        "0xd8c31cae8e422ef1211a535c56bad0edd3dea2173fda14ac9197d833ddea9731"
+      ]
+    }
+  ]
+}

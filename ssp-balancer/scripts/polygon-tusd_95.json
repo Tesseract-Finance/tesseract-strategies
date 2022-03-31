@@ -1,0 +1,47 @@
+{
+  "config": {
+    "token": "TUSD",
+    "reportsDirectory": "../reports/",
+    "reportFilename": "/__polygon_0x2e1ad108ff1d8c782fcbbb89aad783ac49586756.json",
+    "jsonSnapshotFilename": "_current-tusd-polygon.json",
+    "fleekNamespace": "balancer-claims-tusd-polygon",
+    "offset": 76,
+    "week": 95
+  },
+  "tokens_data": [
+    {
+      "address": "0x006862eDbBDb825CAAAe1354FB07242089F46C38",
+      "claim_amount": "92558243770000000000",
+      "hex_proof": [
+        "0x071404477a3182a025c4965eccdc254d2c756d3c78015511483260178951c86c",
+        "0xd2c95e8e3df168f3e84ee0f2498bc98c670db83f8a3c285bc97758184a1c31d8",
+        "0x16de32a66d29bae2aa962fa105acf67b90325dd6942cccf92e7d4a88a06435f4",
+        "0x30656c1e8a3a811cf68ebfb7fd059070a46a9d9c47224a03987a4383fd8514f7",
+        "0xcd846b9be6de2bc6287e2168e68bb196252c6e27b7216ba7614154a86344e705",
+        "0x1d65ba59ca4921c648d12b050140a46deb3ec89206c32f56dabe886b69ae74c4",
+        "0xd4aec1749ad8d7cd33e9723a213af843c0b87e590dae2d608845a48ba5ab1e74",
+        "0xb3a554f6a772ab7c9813856c159a27de1b9528e392f03b0135eb7953dd34cd4a",
+        "0x520f3f6c5a580d13b68e29719ccb983ba22a9f08080c0a34e07692b1ea093719",
+        "0xf26b0ac04f36dd7f9e67adba9abd093f310ca3333820fbe825945ea2995c32ef",
+        "0x62270734b31a8a12755b0e819061aab6acc5eb29a38b3174cec3acccf4d1138d"
+      ]
+    },
+    {
+      "address": "0xD0B30cEEfCCcdB0DcA26e79029758B5f3eEEd6E2",
+      "claim_amount": "207392086810000000000",
+      "hex_proof": [
+        "0xd8b7fb92699ecb436a3fef1c7d5862d5f58c7d7cb9707dc71b94b8adaf03aecc",
+        "0xcceab84a992abb36895fe635b54d90abe647ff265646c5f95da9f510310bdd6b",
+        "0xdd9d44ec90b60cf2b1311f534343c875bf07a31e169aab0223af49599b7b06d7",
+        "0xd6f2ed6d1ecac94cab1b3cfd3e9d99a4e908476b110d9462f17c17cc0bdb406f",
+        "0xe4a9fc4966d57fc26fbdccae73c54c5c29e411d0eacb64b5c946d8710cf04555",
+        "0x6dd144ac6cc0141351711ad3a841d381837696a4dbdbe647a177b9cf77e15665",
+        "0xeeae2eb85491bef9d8d10f02ba60c94cba271af1bed34edb9c541a7aadcca3f5",
+        "0x04c3dcbd04fa5ea7b47cb95668103a6b16b52943aca523e1332fbb981103eaa3",
+        "0xa81d4b0e4c8d3608af0424760dbcfe83f5786f3886d525cd290e8f42992ce242",
+        "0xa9d667d0fabeb61395c23828f3ce9103e9a8fea2ca4f4ab2b40108d89108c0a9",
+        "0x62270734b31a8a12755b0e819061aab6acc5eb29a38b3174cec3acccf4d1138d"
+      ]
+    }
+  ]
+}
