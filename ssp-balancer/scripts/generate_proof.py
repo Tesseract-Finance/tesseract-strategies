@@ -29,7 +29,7 @@ def main():
     network = parse.distNetwork
     token = parse.token
     offset = parse.offset
-    url = f'https://raw.githubusercontent.com/balancer-labs/bal-mining-scripts/master/reports/{week}/__polygon_0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3.json'
+    url = f'https://raw.githubusercontent.com/balancer-labs/bal-mining-scripts/master/reports/{week}/__polygon_{token}.json'
     resp = requests.get(url)
     data = json.loads(resp.text)    
     result = []
@@ -40,11 +40,13 @@ def main():
         symbol = "BAL"
         file = Path(f'polygon_{week}.json')
         checked_file = f"{network}_{week}_{strategies}*.json"
+        jsonSnapshotFilename = "_current-polygon.json"
     else:
         namespace = "balancer-claims-tusd-polygon"
         symbol = "TUSD"
         file = Path(f'polygon-tusd_{week}.json')
-        checked_file = f"{network}_tusd_{week}_{strategies}*.json"
+        checked_file = f"{network}-tusd_{week}_{strategies}*.json"
+        jsonSnapshotFilename = "_current-tusd-polygon.json"
     # fetch bal mining for data
     file.touch(exist_ok=True)
     length = len(strategies)
@@ -69,7 +71,7 @@ def main():
         "token": symbol,
         "reportsDirectory": "../reports/",
         "reportFilename": f"/__polygon_{token}.json",
-        "jsonSnapshotFilename": "_current-polygon.json",
+        "jsonSnapshotFilename": jsonSnapshotFilename,
         "fleekNamespace": namespace,
         "offset": offset,
         "week": week
@@ -78,16 +80,10 @@ def main():
     }, indent=4, sort_keys=True)
     
     # create the file and clean repo
-    if network == "polygon": 
-        with open(f"{network}_{week}.json", "w") as outfile:
-            outfile.write(results)
-        for fn in glob.glob(f"{network}_{week}_*.json"):
-            os.remove(fn)
-    else:
-        with open(f"{network}-tusd_{week}.json", "w") as outfile:
-            outfile.write(results)
-        for fn in glob.glob(f"{network}-tusd_{week}_*.json"):
-            os.remove(fn)
+    with open(f"{network}_{week}.json", "w") as outfile:
+        outfile.write(results)
+    for fn in glob.glob(f"{network}-tusd_{week}_*.json"):
+        os.remove(fn)
     # clean repo
 if __name__ == '__main__':
     main()

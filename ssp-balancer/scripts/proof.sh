@@ -12,5 +12,5 @@ npm install
 if [[ $1 = "polygon" ]]; then
     npx ts-node js/src/getProof.ts --recipient $2 --decimals $3 --balance $4 --outfile ../${1}_${5}_${2}.json
 else
-    npx ts-node js/src/getProof.ts --recipient $2 --decimals $3 --balance $4 --outfile ../${1}_tusd_${5}_${2}.json
+    npx ts-node js/src/getProof.ts --recipient $2 --decimals $3 --balance $4 --outfile ../${1}-tusd_${5}_${2}.json
 fi
