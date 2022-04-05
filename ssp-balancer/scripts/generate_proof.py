@@ -82,8 +82,14 @@ def main():
     # create the file and clean repo
     with open(f"{network}_{week}.json", "w") as outfile:
         outfile.write(results)
-    for fn in glob.glob(f"{network}-tusd_{week}_*.json"):
+    for fn in glob.glob(checked_file):
         os.remove(fn)
+    # if network == 'polygon':
+    #     for fn in glob.glob(f"{network}_{week}_*.json"):
+    #         os.remove(fn)
+    # else:
+    #     for fn in glob.glob(f"{network}-tusd_{week}_*.json"):
+    #         os.remove(fn)
     # clean repo
 if __name__ == '__main__':
     main()
