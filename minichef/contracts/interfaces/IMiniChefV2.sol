@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 interface IMiniChefV2 {
 
@@ -15,11 +16,19 @@ interface IMiniChefV2 {
 
     function emergencyExit(uint pid, address to) external;
 
-    function poolInfo(uint256 _pid)  external view returns (address, uint256, uint256, uint256);
+    struct UserInfo {
+        uint256 amount;
+        uint256 rewardDebt;
+    }
 
-    function userInfo(uint256 _pid, address user)
-            external
-            view
-            returns (uint256, uint256);
+    struct PoolInfo {
+        uint128 accSushiPerShare;
+        uint64 lastRewardTime;
+        uint64 allocPoint;
+    }
 
+    function userInfo(uint256 _pid, address _user)
+        external
+        view
+        returns (IMiniChefV2.UserInfo memory);
 }
