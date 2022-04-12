@@ -68,10 +68,9 @@ contract Strategy is BaseStrategy {
         poolToken = _poolToken;
         reward = _reward;
 
-        // IERC20(wNative).approve(address(router), type(uint256).max);
         wmatic.approve(address(router), type(uint256).max);
-        // IERC20(reward).approve(address(router), type(uint256).max);
-        // IERC20(poolToken).approve(address(chef), type(uint256).max);
+        IERC20(reward).approve(address(router), type(uint256).max);
+        IERC20(poolToken).approve(address(chef), type(uint256).max);
         
     }
 
@@ -125,11 +124,6 @@ contract Strategy is BaseStrategy {
     }
 
 
-    function balanceOfTarget() public view returns (uint256) {
-        uint256 tokenBalance = IERC20(targetToken).balanceOf(address(this));
-        return tokenBalance;
-    }
-
     /**
      * @notice get the amount of lpToken stake on farm
      * @return balance of poolToken staked
@@ -146,6 +140,10 @@ contract Strategy is BaseStrategy {
         return IERC20(poolToken).balanceOf(address(this));
     }
 
+    /**
+     * @notice get the amount of reward Token available on the strategy
+     * @return balance of synapse 
+     */
     function balanceReward() public view returns (uint256) {
         return IERC20(reward).balanceOf(address(this));
     }
@@ -272,11 +270,11 @@ contract Strategy is BaseStrategy {
             _debtPayment = Math.min(_amountFreed, _debtOutstanding);
         }
 
-        uint256 rewardBefore = balanceReward();
+        uint256 optimalBefore = balanceOfOptimal();
         chef.harvest(pid, address(this));
         rewardToOptimal();
 
-        _profit = balanceReward().sub(rewardBefore);
+        _profit = balanceOfOptimal().sub(optimalBefore);
     }
 
     /**
@@ -303,7 +301,7 @@ contract Strategy is BaseStrategy {
      * @dev    swap synapse rewards to target token
      */
     function rewardToOptimal() internal {
-        uint256 rewardBalance = IERC20(reward).balanceOf(address(this));
+        uint256 rewardBalance = balanceReward();
         if(rewardBalance > 0) {
             _sell(address(reward), targetToken, rewardBalance);
         }
