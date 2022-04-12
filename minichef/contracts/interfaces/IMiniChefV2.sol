@@ -31,4 +31,6 @@ interface IMiniChefV2 {
         external
         view
         returns (IMiniChefV2.UserInfo memory);
+
+    function poolInfo(uint256 pid) external view returns (IMiniChefV2.PoolInfo memory);
 }
