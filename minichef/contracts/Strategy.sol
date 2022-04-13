@@ -20,7 +20,6 @@ contract Strategy is BaseStrategy {
     using Address for address;
     using SafeMath for uint256;
 
-    address public reward;
     address public targetToken;
     address public poolToken;
     address public voter;
@@ -42,39 +41,52 @@ contract Strategy is BaseStrategy {
     constructor(
         address _vault,
         address _chef,
-        address _reward,
         address _poolToken,
         address _router,
         uint _pid
     ) public BaseStrategy(_vault) {
-         _initializeStrat(_chef, _reward, _router, _poolToken, _pid);
-    }
-
-
-    function _initializeStrat(
-        address _chef,
-        address _reward,
-        address _router,
-        address _poolToken,
-        uint256 _pid
-    ) internal {
         require(
             address(router) == address(0),"Minichef strategy already initialized"
         );
-        chef = IMiniChefV2(_chef);
-        router = IUniswapV2Router02(_router);
         pid = _pid;
         targetToken = address(usdt);
         poolToken = _poolToken;
-        reward = _reward;
+        chef = IMiniChefV2(_chef);
+        router = IUniswapV2Router02(_router);
 
         wmatic.approve(address(router), type(uint256).max);
-        IERC20(reward).approve(address(router), type(uint256).max);
+        synapse.approve(address(router), type(uint256).max);
         IERC20(poolToken).approve(address(chef), type(uint256).max);
-        
+        //  _initializeStrat(_chef, _router, _poolToken, _pid);
     }
 
 
+    // function _initializeStrat(
+    //     address _chef,
+    //     address _router,
+    //     address _poolToken,
+    //     uint256 _pid
+    // ) internal {
+    //     require(
+    //         address(router) == address(0),"Minichef strategy already initialized"
+    //     );
+    //     chef = IMiniChefV2(_chef);
+    //     router = IUniswapV2Router02(_router);
+    //     pid = _pid;
+    //     targetToken = address(usdt);
+    //     poolToken = _poolToken;
+
+    //     wmatic.approve(address(router), type(uint256).max);
+    //     synapse.approve(address(router), type(uint256).max);
+    //     IERC20(poolToken).approve(address(chef), type(uint256).max);
+        
+    // }
+
+    /**
+     * @notice set the stable coin we want to swap for
+     * @param  _optimal is id of the stable coin
+     * @dev    only callable by an authorised party
+     */
     function setOptimal(uint256 _optimal) external onlyAuthorized {
         if(_optimal == 0) {
             targetToken = address(dai);
@@ -92,7 +104,11 @@ contract Strategy is BaseStrategy {
 
 
 
-
+    /**
+     * @notice set the router address
+     * @param  _router point to exchange address
+     * @dev    only callable by an authorised party
+     */
     function setRouter(address _router) public onlyAuthorized {
         require(_router != address(0), "invalid address");
         router = IUniswapV2Router02(_router);
@@ -145,7 +161,7 @@ contract Strategy is BaseStrategy {
      * @return balance of synapse 
      */
     function balanceReward() public view returns (uint256) {
-        return IERC20(reward).balanceOf(address(this));
+        return synapse.balanceOf(address(this));
     }
 
 
@@ -195,7 +211,7 @@ contract Strategy is BaseStrategy {
     function protectedTokens() internal view override returns (address[] memory) {
         address[] memory protected = new address[](4);
         protected[0] = poolToken;
-        protected[1] = reward;
+        protected[1] = address(synapse);
         protected[2] = address(wmatic);
         protected[3] = targetToken;
         return protected;
@@ -287,7 +303,7 @@ contract Strategy is BaseStrategy {
         if (emergencyExit) {
             return;
         }
-        if (_debtOutstanding > _lpTokenAvailable) {
+        if (_debtOutstanding >= _lpTokenAvailable) {
             return;
         }
         uint256 investAmount = _lpTokenAvailable.sub(_debtOutstanding);
@@ -303,7 +319,7 @@ contract Strategy is BaseStrategy {
     function rewardToOptimal() internal {
         uint256 rewardBalance = balanceReward();
         if(rewardBalance > 0) {
-            _sell(address(reward), targetToken, rewardBalance);
+            _sell(address(synapse), targetToken, rewardBalance);
         }
     }
 
