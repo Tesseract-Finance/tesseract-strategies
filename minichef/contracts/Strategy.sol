@@ -155,6 +155,24 @@ contract Strategy is BaseStrategy {
         emit Cloned(newStrategy);
     }
 
+    // These functions are useful for setting parameters of the strategy that may need to be adjusted.
+    // Set optimal token to sell harvested funds for depositing to Curve.
+    // Default is DAI, but can be set to USDC, USDT, WETH or WBTC as needed by strategist or governance.
+    function setOptimal(uint256 _optimal) external onlyAuthorized {
+        if (_optimal == 0) {
+            targetToken = address(dai);
+            optimal = 0;
+        } else if (_optimal == 1) {
+            targetToken = address(usdc);
+            optimal = 1;
+        } else if (_optimal == 2) {
+            targetToken = address(usdt);
+            optimal = 2;
+        } else {
+            revert("incorrect token");
+        }
+    }
+
     // exit from chef liquidity
     function emergencyWithdrawal() external onlyAuthorized {
         chef.emergencyWithdraw(pid, address(this));
