@@ -223,7 +223,7 @@ contract Strategy is BaseStrategy {
         ) 
     {
         if (_debtOustanding > 0) {
-            uint256 _amounToFree;
+            uint256 _amountToFree;
             (_amountToFree, _loss) = liquidatePosition(_debtOustanding);
             _debtPayment = Math.min(_amountToFree, _debtOustanding);
         }
