@@ -100,7 +100,7 @@ def management(accounts):
 # sushiswap router router address
 @pytest.fixture(scope="module")
 def router():
-    router_address = interface.IUniswapV2Router02("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
+    router_address = Contract("0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506")
     yield router_address
 
 @pytest.fixture(scope="module")
@@ -170,8 +170,9 @@ def strategy(
         Strategy,
         vault,
         chef,
-        router,
         poolToken,
+        synapseToken,
+        router,
         pid
     )
     strategy.setKeeper(keeper, {"from": gov})
@@ -179,9 +180,6 @@ def strategy(
     vault.setManagementFee(0, {"from": gov})
     # add our new strategy
     vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
-    # strategy.setHealthCheck(healthCheck, {"from": gov})
-    # strategy.setDoHealthCheck(True, {"from": gov})
-    strategy.setVoter(voter, {"from": gov})
     chain.sleep(1)
     strategy.harvest({"from": gov})
     chain.sleep(1)
