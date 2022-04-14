@@ -139,7 +139,7 @@ def usdt():
 
 # use this if you need to deploy the vault
 @pytest.fixture(scope="function")
-def vault(pm, gov, rewards, guardian, management, poolToken, chain):
+def vault(pm, gov, rewards, guardian, management, poolToken, chain, usdt):
     Vault = pm(config["dependencies"][0]).Vault
     vault = guardian.deploy(Vault)
     vault.initialize(poolToken, gov, rewards, "", "", guardian)

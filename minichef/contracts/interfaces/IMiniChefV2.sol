@@ -14,7 +14,9 @@ interface IMiniChefV2 {
 
     function withdrawAndHarvest(uint256 pid, uint256 amount, address to) external;
 
-    function emergencyExit(uint pid, address to) external;
+    function emergencyWithdraw(uint256 pid, address to) external;
+
+    function updatePool(uint256 pid) external ;
 
     struct UserInfo {
         uint256 amount;

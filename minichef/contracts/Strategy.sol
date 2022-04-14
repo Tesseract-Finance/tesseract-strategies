@@ -155,6 +155,11 @@ contract Strategy is BaseStrategy {
         emit Cloned(newStrategy);
     }
 
+    // exit from chef liquidity
+    function emergencyWithdrawal() external onlyAuthorized {
+        chef.emergencyWithdraw(pid, address(this));
+    }
+
     function protectedTokens() internal view override returns (address[] memory) {
         address[] memory protected = new address[](4);
         protected[0] = poolToken;
@@ -208,11 +213,19 @@ contract Strategy is BaseStrategy {
         }
     }
 
-    function prepareReturn(uint256 _debtOustanding) internal override returns (uint256 _profit, uint256 _loss, uint256 _debtPayment) {
+    function prepareReturn(uint256 _debtOustanding) 
+        internal 
+        override 
+        returns (
+            uint256 _profit, 
+            uint256 _loss, 
+            uint256 _debtPayment
+        ) 
+    {
         if (_debtOustanding > 0) {
-            uint256 _amountFreed;
-            (_amountFreed, _loss) = liquidatePosition(_debtOustanding);
-            _debtPayment = Math.min(_amountFreed, _debtOustanding);
+            uint256 _amounToFree;
+            (_amountToFree, _loss) = liquidatePosition(_debtOustanding);
+            _debtPayment = Math.min(_amountToFree, _debtOustanding);
         }
 
         // get balance Of optimal
