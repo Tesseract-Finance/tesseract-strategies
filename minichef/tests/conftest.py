@@ -48,6 +48,12 @@ def zero_address():
     zero_address = "0x0000000000000000000000000000000000000000"
     yield zero_address
 
+# this is the name we want to give our strategy
+@pytest.fixture(scope="module")
+def strategy_name():
+    strategy_name = "SynapseStaker"
+    yield strategy_name
+
 
 # Define any accounts in this section
 # for live testing, governance is the strategist MS; we will update this before we endorse
@@ -152,35 +158,24 @@ def vault(pm, gov, rewards, guardian, management, poolToken, chain, usdt):
 def strategy(
     Strategy,
     keeper,
+    strategy_name,
     vault,
     strategist,
     gov,
-    router,
-    chef,
-    poolToken,
-    synapseToken,
-    usdc,
-    usdt,
-    dai,
     pid,
-    chain,
-    voter
+    healthCheck,
 ):
     strategy = strategist.deploy(
         Strategy,
         vault,
-        chef,
-        poolToken,
-        synapseToken,
-        router,
-        pid
+        pid,
+        strategy_name
     )
     strategy.setKeeper(keeper, {"from": gov})
     # set our management fee to zero so it doesn't mess with our profit checking
     vault.setManagementFee(0, {"from": gov})
     # add our new strategy
     vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
-    chain.sleep(1)
-    strategy.harvest({"from": gov})
-    chain.sleep(1)
+    strategy.setHealthCheck(healthCheck, {"from": gov})
+    strategy.setDoHealthCheck(True, {"from": gov})
     yield strategy

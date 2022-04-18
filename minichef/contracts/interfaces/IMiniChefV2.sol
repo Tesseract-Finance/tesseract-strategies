@@ -33,6 +33,16 @@ interface IMiniChefV2 {
         external
         view
         returns (IMiniChefV2.UserInfo memory);
+    
+    function lpToken(uint256 _pid) external view returns (address);
 
-    function poolInfo(uint256 pid) external view returns (IMiniChefV2.PoolInfo memory);
+    function poolInfo(uint256 _pid)
+        external
+        view
+        returns (
+            address lpToken,
+            uint256 allocPoint,
+            uint256 lastRewardTime,
+            uint256 accOXDPerShare
+        );
 }
