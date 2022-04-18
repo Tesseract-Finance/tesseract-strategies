@@ -21,3 +21,4 @@ if [[ $1 = "polygon" ]]; then
 else
     npx ts-node js/src/getProof.ts --recipient $2 --decimals $3 --balance $4 --week_num ${5} --outfile ../${1}-tusd_${5}_${2}.json
 fi
+
