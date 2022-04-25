@@ -74,7 +74,7 @@ contract Strategy is BaseStrategy {
     ) internal {
         // initialize variables
         maxReportDelay = 43200; // 1/2 day in seconds, if we hit this then harvestTrigger = True
-        healthCheck = address(0xf13Cd6887C62B5beC145e30c38c4938c5E627fe0); // Fantom common health check
+        healthCheck = address(0x6fD0f710f30d4dC72840aE4e263c22d3a9885D3B); // avax common health check
         // set our strategy's name
         stratName = _name;
         pid = _pid;
@@ -352,7 +352,7 @@ contract Strategy is BaseStrategy {
     function rewardToOptimal() internal {
         uint256 rewardBalance = emissionToken.balanceOf(address(this));
         if (rewardBalance > 0) {
-            // swap reward for optimal on sushiswap
+            // swap reward for optimal
             _sell(
                 address(emissionToken), 
                 targetToken, 
@@ -362,7 +362,7 @@ contract Strategy is BaseStrategy {
     }
 
 
-    // swap rewards to target using sushiswap router
+    // swap rewards to target using assigned router
     function _sell(
         address _tokenFrom,
         address _tokenTo,
