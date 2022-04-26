@@ -240,7 +240,7 @@ contract Strategy is BaseStrategy {
         }
     }
 
-    // withdraw all funds, harvest for synase and sell for optimal token
+    // withdraw all funds
     function liquidateAllPositions() internal override returns (uint256) {
         uint256 amount = balanceOfStaked();
         if (amount > 0) {
@@ -273,48 +273,15 @@ contract Strategy is BaseStrategy {
             // sell our emissionToken
             rewardToOptimal();
         }
+        // reinvest optimal
+        uint256[] memory data = new uint256[](4);
+        data[0] = nusd.balanceOf(address(this));
+        data[1] = dai.balanceOf(address(this));
+        data[2] = usdc.balanceOf(address(this));
+        data[3] = usdt.balanceOf(address(this));
 
-        // deposit optimal to synpase curve strategy
-        if (optimal == 0) {
-            uint256 daiBalance = dai.balanceOf(address(this));
-            if (daiBalance > 0) {
-                uint[] memory dataDai = new uint[](4);
-                dataDai[0] = 0;
-                dataDai[1] = daiBalance;
-                dataDai[2] = 0;
-                dataDai[3] = 0;
-                curve.addLiquidity(dataDai, 0, now);
-            }
-        } else if (optimal == 1) {
-            uint256 usdcBalance = usdc.balanceOf(address(this));
-            if (usdcBalance > 0) {
-                uint[] memory dataUSDC = new uint[](4);
-                dataUSDC[0] = 0;
-                dataUSDC[1] = 0;
-                dataUSDC[2] = usdcBalance;
-                dataUSDC[3] = 0;
-                curve.addLiquidity(dataUSDC, 0, now);
-            }
-        } else if (optimal == 2) {
-            uint256 usdtBalance = usdt.balanceOf(address(this));
-            if (usdtBalance > 0) {
-                uint[] memory dataUSDT = new uint[](4);
-                dataUSDT[0] = 0;
-                dataUSDT[1] = 0;
-                dataUSDT[2] = 0;
-                dataUSDT[3] = usdtBalance;
-                curve.addLiquidity(dataUSDT, 0, now);
-            }
-        } else if (optimal == 3) {
-            uint256 nusdBalance = nusd.balanceOf(address(this));
-            if (nusdBalance > 0) {
-                uint[] memory dataNUSD = new uint[](4);
-                dataNUSD[0] = nusdBalance;
-                dataNUSD[1] = 0;
-                dataNUSD[2] = 0;
-                dataNUSD[3] = 0;
-                curve.addLiquidity(dataNUSD, 0, now);
-            }
+        if (data[0] > 0 || data[1] > 0 || data[2] > 0 || data[3] > 0) {
+            curve.addLiquidity(data, 0, now);
         }
         // get assets balance
         uint256 assets = estimatedTotalAssets();
