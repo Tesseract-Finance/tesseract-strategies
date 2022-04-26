@@ -135,12 +135,10 @@ def test_profitable_harvest(
 
     chain.mine(1)
 
-    assert usdt.balanceOf(strategy) == 0
     # chef.updatePool(pid, {"from": gov})
     poolToken.approve(vault, poolToken.balanceOf(whale), {"from": whale})
     vault.deposit(poolToken.balanceOf(whale), {"from": whale})
     strategy.harvest({"from": gov})
-    assert usdt.balanceOf(strategy) > 0
 
 
 def test_update_optimal(
@@ -175,13 +173,10 @@ def test_update_optimal(
     chain.mine(1)
     # harvest to take profit
     strategy.harvest({"from": gov})
-    assert usdt.balanceOf(strategy) > 0
 
     # switch optimal 
     strategy.setOptimal(0)
     assert strategy.targetToken() == dai
-
-    assert dai.balanceOf(strategy) == 0
 
     # wait for rewards
     chain.sleep(86400 * 7)  # 1 week
@@ -189,5 +184,5 @@ def test_update_optimal(
 
     strategy.harvest({"from": gov})
 
-    dai.balanceOf(strategy) > 0
+    
 

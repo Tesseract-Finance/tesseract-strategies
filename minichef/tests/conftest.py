@@ -8,7 +8,7 @@ def isolation(fn_isolation):
 
 @pytest.fixture(scope="module")
 def whale(accounts):
-    whale = accounts.at("0x012f11883b03d2C6C56706caE752343396bdD72b", force=True)
+    whale = accounts.at("0x2283ABD09435C7213894d229fbA8f654924dB8A0", force=True)
     yield whale
 
 @pytest.fixture(scope="module")
@@ -73,7 +73,7 @@ def synapseToken():
 
 @pytest.fixture(scope="module")
 def poolToken():
-    tokenAddress = Contract.from_explorer("0xCA87BF3ec55372D9540437d7a86a7750B42C02f4")
+    tokenAddress = Contract("0xCA87BF3ec55372D9540437d7a86a7750B42C02f4")
     yield tokenAddress
 
 @pytest.fixture(scope="module")

@@ -17,18 +17,20 @@ def test_simple_harvest(
     chef,
     synapseToken,
     pid,
-    usdt
+    usdt,
+    dai
 ):
     ## deposit to the vault after approving
     startingWhale = poolToken.balanceOf(whale)
     poolToken.approve(vault, 2 ** 256 - 1, {"from": whale})
-    vault.deposit(amount, {"from": whale})
+    vault.deposit(poolToken.balanceOf(whale), {"from": whale})
     newWhale = poolToken.balanceOf(whale)
 
     # harvest, store asset amount
     chain.sleep(1)
     strategy.setDoHealthCheck(False, {"from": gov})
     strategy.harvest({"from": gov})
+    # assert dai.balanceOf(strategy) == 0
     chain.sleep(1)
     old_assets = vault.totalAssets()
     assert old_assets > 0
@@ -68,9 +70,9 @@ def test_simple_harvest(
         ),
     )
 
-    gain = usdt.balanceOf(strategy)
+    gain = poolToken.balanceOf(vault)
     assert gain > 0
 
     # withdraw and confirm we made money, or at least that we have about the same
     vault.withdraw({"from": whale})
-    assert poolToken.balanceOf(whale) >= startingWhale
+    assert poolToken.balanceOf(whale) > startingWhale

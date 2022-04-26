@@ -40,7 +40,7 @@ interface IMiniChefV2 {
         external
         view
         returns (
-            address lpToken,
+            address _lpToken,
             uint256 allocPoint,
             uint256 lastRewardTime,
             uint256 accOXDPerShare

@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import "./interfaces/IMiniChefV2.sol";
 import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IUniswapV2Factory.sol";
+import "./interfaces/curve.sol";
 
 import "@tesrvaults/contracts/BaseStrategy.sol";
 
@@ -21,7 +22,6 @@ contract Strategy is BaseStrategy {
     using SafeMath for uint256;
 
     address public targetToken;
-    // address public poolToken = IERC20(0x7479e1bc2f2473f9e78c89b4210eb6d55d33b645);
 
     uint256 public pid;
     uint256 public optimal = 2;
@@ -29,16 +29,18 @@ contract Strategy is BaseStrategy {
     string internal stratName;
     bool internal isOriginal = true;
 
-
     IERC20 internal constant wavax = IERC20(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
     IERC20 internal constant usdt = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
     IERC20 internal constant usdc = IERC20(0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E);
     IERC20 internal constant dai = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
+    IERC20 internal constant nusd = IERC20(0xCFc37A6AB183dd4aED08C204D1c2773c0b1BDf46);
     IERC20 internal poolToken = IERC20(0xCA87BF3ec55372D9540437d7a86a7750B42C02f4);
     IERC20 public constant emissionToken = IERC20(0x1f1E7c893855525b303f99bDF5c3c05Be09ca251);
 
     IUniswapV2Router02 public constant router = IUniswapV2Router02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4); // traderjoe router
     IMiniChefV2 public constant chef = IMiniChefV2(0x3a01521F8E7F012eB37eAAf1cb9490a5d9e18249);
+
+    ICurveFi public constant curve = ICurveFi(0xED2a7edd7413021d440b09D654f3b87712abAB66);
 
 
     bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
@@ -73,7 +75,7 @@ contract Strategy is BaseStrategy {
         string memory _name
     ) internal {
         // initialize variables
-        maxReportDelay = 43200; // 1/2 day in seconds, if we hit this then harvestTrigger = True
+        maxReportDelay = 86400; // 1 day in seconds, if we hit this then harvestTrigger = True
         healthCheck = address(0x6fD0f710f30d4dC72840aE4e263c22d3a9885D3B); // avax common health check
         // set our strategy's name
         stratName = _name;
@@ -86,6 +88,9 @@ contract Strategy is BaseStrategy {
         wavax.approve(address(router), type(uint256).max);
         want.approve(address(chef), type(uint256).max);
         emissionToken.approve(address(router), type(uint256).max);
+        usdt.safeApprove(address(curve), type(uint256).max);
+        usdc.approve(address(curve), type(uint256).max);
+        dai.approve(address(curve), type(uint256).max);
     }
 
     /* ========== VIEWS ========== */
@@ -193,8 +198,9 @@ contract Strategy is BaseStrategy {
         } else if (_optimal == 2) {
             targetToken = address(usdt);
             optimal = 2;
-        } else {
-            revert("incorrect token");
+        } else if (_optimal == 3) {
+            targetToken = address(nusd);
+            optimal = 3;
         }
     }
 
@@ -268,6 +274,48 @@ contract Strategy is BaseStrategy {
             rewardToOptimal();
         }
 
+        // deposit optimal to synpase curve strategy
+        if (optimal == 0) {
+            uint256 daiBalance = dai.balanceOf(address(this));
+            if (daiBalance > 0) {
+                uint[] memory dataDai = new uint[](4);
+                dataDai[0] = 0;
+                dataDai[1] = daiBalance;
+                dataDai[2] = 0;
+                dataDai[3] = 0;
+                curve.addLiquidity(dataDai, 0, now);
+            }
+        } else if (optimal == 1) {
+            uint256 usdcBalance = usdc.balanceOf(address(this));
+            if (usdcBalance > 0) {
+                uint[] memory dataUSDC = new uint[](4);
+                dataUSDC[0] = 0;
+                dataUSDC[1] = 0;
+                dataUSDC[2] = usdcBalance;
+                dataUSDC[3] = 0;
+                curve.addLiquidity(dataUSDC, 0, now);
+            }
+        } else if (optimal == 2) {
+            uint256 usdtBalance = usdt.balanceOf(address(this));
+            if (usdtBalance > 0) {
+                uint[] memory dataUSDT = new uint[](4);
+                dataUSDT[0] = 0;
+                dataUSDT[1] = 0;
+                dataUSDT[2] = 0;
+                dataUSDT[3] = usdtBalance;
+                curve.addLiquidity(dataUSDT, 0, now);
+            }
+        } else if (optimal == 3) {
+            uint256 nusdBalance = nusd.balanceOf(address(this));
+            if (nusdBalance > 0) {
+                uint[] memory dataNUSD = new uint[](4);
+                dataNUSD[0] = nusdBalance;
+                dataNUSD[1] = 0;
+                dataNUSD[2] = 0;
+                dataNUSD[3] = 0;
+                curve.addLiquidity(dataNUSD, 0, now);
+            }
+        }
         // get assets balance
         uint256 assets = estimatedTotalAssets();
         uint256 wantBal = balanceOfWant();
