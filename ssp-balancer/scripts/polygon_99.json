@@ -1,0 +1,69 @@
+{
+    "config": {
+        "fleekNamespace": "balancer-claims-polygon",
+        "jsonSnapshotFilename": "_current-polygon.json",
+        "offset": 71,
+        "reportFilename": "/__polygon_0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3.json",
+        "reportsDirectory": "../reports/",
+        "token": "BAL",
+        "week": 99
+    },
+    "tokens_data": [
+        {
+            "address": "0xD0B30cEEfCCcdB0DcA26e79029758B5f3eEEd6E2",
+            "claim_amount": "1382890590000000000",
+            "hex_proof": [
+                "0xfd577f430e2e29f77701e909e2b1872105760d544294df15fda83babbc077dee",
+                "0x063c4b7a844b98d053628adbef8400b67f72e5d6a094c5fee4aac127ec999c73",
+                "0x16d72da429fe413cfdbcf3bb1930c83321bc2450c4eb2ad2043cca50469644ee",
+                "0xb014953052844cde62fd6f3374742a8f9ea67da8c8eaa978583943bd6bda5d09",
+                "0xa484b2d7eba7b441be1bcdf6d10959f8ca80bb0b683effc026a66467bda30b67",
+                "0x9b8589d830839acfb7d1ec643203cbf62a12ae4b3440b1c327f17ddbc4c514e9",
+                "0xef57944248183f5ea45ec1dfaa24859caadee2ea51df2803937c3bffa027b0bc",
+                "0x8b72873f55b667133da0438005da1c973f7593b35098d55c8528a61bf5225d02",
+                "0xcca2346c9612b28bc286a47a9c184e6727f2089e907459ef8cd487bc6213754b",
+                "0x03d0b0110e2f6d98cb9bcc4da9b02010d57589386992683bc79a9b100db604be",
+                "0xc532a579075196b6f89d192a3fb26b3e5ddcd6a8917b680d663cc7d17921bcb1",
+                "0xc800ba3ce8bf5f3d15fef6a78702d6e078a4f1ed9734201e86849463f58369bf"
+            ]
+        },
+        {
+            "address": "0x006862eDbBDb825CAAAe1354FB07242089F46C38",
+            "claim_amount": "361530820000000000",
+            "hex_proof": [
+                "0xf7f9a7b650329c3b0f8d83616f521046d2449415aa1fc3a0df514cbc0b1533b3",
+                "0x46e51717c0b43ad0a418d5b98a4f03470a1be55091bdcecb99e46d2fec4c9dbe",
+                "0x643694046e87ae903a8833d924735d47c91485684e681b627e30d066f349f699",
+                "0x8aec4c12639fc50a63acfaad28a7b90abf5507afc2713bb7b8687d1c3be5aba0",
+                "0xc3f6d3d3499fdbd0939c4add88b256972d98ed3fbf0377450b5222983d289afe",
+                "0x91d1860bca18146e27ae3ffa1b5ae90ee3fc38c6717b846f61129907637a9346",
+                "0x8b064b336be5a4a5e540b9b0692914a9a0bc1a197f0fe6c02ed6927c8c551e25",
+                "0xaf2d05fef4302040006bfe56d293e4426549305daf5f7bf67dcc3aff264a2cbd",
+                "0xcca2346c9612b28bc286a47a9c184e6727f2089e907459ef8cd487bc6213754b",
+                "0x03d0b0110e2f6d98cb9bcc4da9b02010d57589386992683bc79a9b100db604be",
+                "0xc532a579075196b6f89d192a3fb26b3e5ddcd6a8917b680d663cc7d17921bcb1",
+                "0xc800ba3ce8bf5f3d15fef6a78702d6e078a4f1ed9734201e86849463f58369bf"
+            ]
+        },
+        {
+            "address": "0xe27FA1C2AE51aEEFD67E0c70Baf59090F719034e",
+            "claim_amount": "997932660000000000",
+            "hex_proof": [
+                "0x4045cf9890481d195f8b96c3c314912757fc2dd1c61e83857574c494a13c55a5",
+                "0x26c2eaa28bb3a8107614157b0cf81ea23d67857c68201b29fbc5735071e4967a",
+                "0x56113dc1eaff484a5281dd53b0b5639d48cce2ad15ad75df959679d9e3bb2630",
+                "0x5bb11fce8d2310796fd2f6e901c0df6560ecbf9674fd89db98d64218ae19e28f",
+                "0xab35c2a7782284d06c13f0f8108421bc35691867ab201dac08da65e29347933e",
+                "0x8f250be7311bc8f8a3961a8c2bff023febd4d685e9a9c2f6aef730cc9b66bbc0",
+                "0xaa3dd964a5825d732035ebb353896fff404b6c04c8c51fc1fd1b0f3f5f814273",
+                "0xe960b227ce546179c4b8933e48a268f72e16df3d1538ab68b558adb4f51ead5b",
+                "0xcd087cb36c391c3c72d88bdc2d66035bc29c4c68db9584240f08e3ad6776c65b",
+                "0xa18284b3f4bc7e31860a54513cf85519391cf3163a8b8a727c2c3a1623014e1d",
+                "0x468d8e24741a74366158b79fe5bfb7a7e2177919a117c6ca2742c37446962140",
+                "0x9defca69c5b17e4e6a0c261c43243a00b701c89fe63df77e6b4c322d957cf0a5",
+                "0x2b96e85e5b1802724bed371eb1351564dd25cbf707ccd0f92c1b3fe5f130a322",
+                "0x8720b887975a254a2cca8da37f7448a5db151dd7bb045661d5d668d2789e6f9f"
+            ]
+        }
+    ]
+}
