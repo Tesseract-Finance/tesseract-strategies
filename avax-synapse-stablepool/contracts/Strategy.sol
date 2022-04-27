@@ -43,14 +43,20 @@ contract Strategy is BaseStrategy{
     IERC20 internal constant nusd = IERC20(0xCFc37A6AB183dd4aED08C204D1c2773c0b1BDf46);
     IERC20 internal constant emissionToken = IERC20(0x7479e1Bc2F2473f9e78c89B4210eb6d55d33b645);
     
-    IUniswapV2Router02 public constant router = IUniswapV2Router02(0x60aE616a2155Ee3d9A68541Ba4544862310933d4); // traderjoe router
     ISwap public constant swapPool = ISwap(0x85fCD7Dd0a1e1A9FCD5FD886ED522dE8221C3EE5);
 
     event Cloned(address indexed clone);
 
     constructor(
-        address _vault
-    ) public BaseStrategy(_vault) {}
+        address _vault,
+        uint256 _maxSingleInvest,
+        uint256 _minTimePerInvest,
+        uint256 _slippageProtectionIn,
+        address _yvToken,
+        string memory _strategyName
+    ) public BaseStrategy(_vault) {
+        _initializeStrat(_maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _yvToken, _strategyName);
+    }
 
 
     function initialize(
