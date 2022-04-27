@@ -23,7 +23,7 @@ def test_simple_harvest(
     ## deposit to the vault after approving
     startingWhale = poolToken.balanceOf(whale)
     poolToken.approve(vault, 2 ** 256 - 1, {"from": whale})
-    vault.deposit(poolToken.balanceOf(whale), {"from": whale})
+    vault.deposit(amount, {"from": whale})
     newWhale = poolToken.balanceOf(whale)
 
     # harvest, store asset amount
