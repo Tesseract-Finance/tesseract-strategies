@@ -41,9 +41,9 @@ contract Strategy is BaseStrategy{
     IERC20 internal constant usdc = IERC20(0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E);
     IERC20 internal constant dai = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
     IERC20 internal constant nusd = IERC20(0xCFc37A6AB183dd4aED08C204D1c2773c0b1BDf46);
-    IERC20 internal constant emissionToken = IERC20(0x7479e1Bc2F2473f9e78c89B4210eb6d55d33b645);
+    IERC20 internal constant emissionToken = IERC20(0xCA87BF3ec55372D9540437d7a86a7750B42C02f4);
     
-    ISwap public constant swapPool = ISwap(0x85fCD7Dd0a1e1A9FCD5FD886ED522dE8221C3EE5);
+    ISwap public constant swapPool = ISwap(0xED2a7edd7413021d440b09D654f3b87712abAB66);
 
     event Cloned(address indexed clone);
 
