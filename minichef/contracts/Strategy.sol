@@ -248,8 +248,8 @@ contract Strategy is BaseStrategy {
                 amount, 
                 address(this)
             );
-            return balanceOfWant();
         }
+        return balanceOfWant();
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
