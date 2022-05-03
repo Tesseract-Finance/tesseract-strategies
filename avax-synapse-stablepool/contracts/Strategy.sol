@@ -20,7 +20,7 @@ contract Strategy is BaseStrategy{
     using SafeMath for uint256;
 
     VaultAPI public yvToken;
-    uint256 public optimal = 2;
+    uint256 public optimal;
     uint256 public lastInvest; // default is 0
     uint256 public minTimePerInvest;// = 3600;
     uint256 public maxSingleInvest;// // 2 hbtc per hour default
@@ -38,7 +38,7 @@ contract Strategy is BaseStrategy{
     bool public withdrawProtection;
 
     IERC20 internal constant usdt = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
-    IERC20 internal constant usdc = IERC20(0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E);
+    IERC20 internal constant usdc = IERC20(0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664);
     IERC20 internal constant dai = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
     IERC20 internal constant nusd = IERC20(0xCFc37A6AB183dd4aED08C204D1c2773c0b1BDf46);
     IERC20 internal constant emissionToken = IERC20(0xCA87BF3ec55372D9540437d7a86a7750B42C02f4);
@@ -92,6 +92,9 @@ contract Strategy is BaseStrategy{
         strategyName = _strategyName;
 
         yvToken = VaultAPI(_yvToken);
+        optimal = 1;
+        curveId = 2;
+        targetToken = address(usdc);
 
         _setupStatics();
     }
@@ -199,7 +202,13 @@ contract Strategy is BaseStrategy{
             return 0;
         }
 
-        return virtualPriceToWant().mul(tokens).div(1e18);
+        //we want to choose lower value of virtual price and amount we really get out
+        //this means we will always underestimate current assets. 
+        uint256 virtualOut = virtualPriceToWant().mul(tokens).div(1e18);
+
+        uint256 realOut = swapPool.calculateRemoveLiquidityOneToken(tokens, curveId);
+
+        return Math.min(virtualOut, realOut);
     }
 
     function virtualPriceToWant() public view returns (uint256) {
@@ -365,17 +374,17 @@ contract Strategy is BaseStrategy{
         uint256 maxSlip = expectedOut.mul(DENOMINATOR.sub(slippageProtectionIn)).div(DENOMINATOR);
 
         // invest all the tokens we have
-        uint256[] memory amounts = new uint256[](4);
-        amounts[0] = nusd.balanceOf(address(this));
-        amounts[1] = dai.balanceOf(address(this));
-        amounts[2] = usdc.balanceOf(address(this));
-        amounts[3] = usdt.balanceOf(address(this));
+        uint256[] memory data = new uint256[](4);
+        data[0] = nusd.balanceOf(address(this));
+        data[1] = dai.balanceOf(address(this));
+        data[2] = usdc.balanceOf(address(this));
+        data[3] = usdt.balanceOf(address(this));
 
-        if (amounts[0] > 0 || amounts[1] > 0 || amounts[2] > 0 || amounts[3] > 0) {
-            swapPool.addLiquidity(amounts, 0, now);
+        if (data[0] > 0 || data[1] > 0 || data[2] > 0 || data[3] > 0) {
+            swapPool.addLiquidity(data, 0, now);
         }
-
-        yvToken.deposit();
+        // check token return
+        // yvToken.deposit();
         lastInvest = block.timestamp;
     }
 
