@@ -31,7 +31,7 @@ contract Strategy is BaseStrategy {
 
     IERC20 internal constant wavax = IERC20(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
     IERC20 internal constant usdt = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
-    IERC20 internal constant usdc = IERC20(0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E);
+    IERC20 internal constant usdc = IERC20(0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664);
     IERC20 internal constant dai = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
     IERC20 internal constant nusd = IERC20(0xCFc37A6AB183dd4aED08C204D1c2773c0b1BDf46);
     IERC20 internal poolToken = IERC20(0xCA87BF3ec55372D9540437d7a86a7750B42C02f4);
