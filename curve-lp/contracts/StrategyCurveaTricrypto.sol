@@ -2,132 +2,8 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-// These are the core Yearn libraries
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/math/Math.sol";
-
-import "./interfaces/curve.sol";
-import "./interfaces/yearn.sol";
 import {IUniswapV2Router02} from "./interfaces/uniswap.sol";
-import {BaseStrategy, StrategyParams} from "@tesrvaults/contracts/BaseStrategy.sol";
-
-abstract contract StrategyCurveBase is BaseStrategy {
-    using SafeERC20 for IERC20;
-    using Address for address;
-    using SafeMath for uint256;
-
-    /* ========== STATE VARIABLES ========== */
-    // these should stay the same across different wants.
-
-    // Curve stuff
-    IGauge public constant gauge = IGauge(0x445FE580eF8d70FF569aB36e80c647af338db351); // Curve gauge contract, tokenized, held by strategy
-
-    // keepCRV stuff
-    address public voter;
-    uint256 public keepCRV; // the percentage of CRV we re-lock for boost (in basis points)
-    uint256 internal constant FEE_DENOMINATOR = 10000; // this means all of our fee values are in basis points
-
-    IERC20 internal constant crv = IERC20(0x47536F17F4fF30e64A96a7555826b8f9e66ec468);
-    IERC20 internal constant wavax = IERC20(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
-
-    bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
-
-    string internal stratName; // set our strategy name here
-
-    /* ========== CONSTRUCTOR ========== */
-
-    constructor(address _vault) public BaseStrategy(_vault) {}
-
-    /* ========== VIEWS ========== */
-
-    function name() external view override returns (string memory) {
-        return stratName;
-    }
-
-    function stakedBalance() public view returns (uint256) {
-        return gauge.balanceOf(address(this));
-    }
-
-    function balanceOfWant() public view returns (uint256) {
-        return want.balanceOf(address(this));
-    }
-
-    function estimatedTotalAssets() public view override returns (uint256) {
-        return balanceOfWant().add(stakedBalance());
-    }
-
-    /* ========== MUTATIVE FUNCTIONS ========== */
-    // these should stay the same across different wants.
-
-    function adjustPosition(uint256 _debtOutstanding) internal override {
-        if (emergencyExit) {
-            return;
-        }
-        // Send all of our LP tokens to deposit to the gauge if we have any
-        uint256 _toInvest = balanceOfWant();
-        if (_toInvest > 0) {
-            gauge.deposit(_toInvest);
-        }
-    }
-
-    function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss) {
-        uint256 _wantBal = balanceOfWant();
-        if (_amountNeeded > _wantBal) {
-            // check if we have enough free funds to cover the withdrawal
-            uint256 _stakedBal = stakedBalance();
-            if (_stakedBal > 0) {
-                gauge.withdraw(Math.min(_stakedBal, _amountNeeded.sub(_wantBal)));
-            }
-            uint256 _withdrawnBal = balanceOfWant();
-            _liquidatedAmount = Math.min(_amountNeeded, _withdrawnBal);
-            _loss = _amountNeeded.sub(_liquidatedAmount);
-        } else {
-            // we have enough balance to cover the liquidation available
-            return (_amountNeeded, 0);
-        }
-    }
-
-    // fire sale, get rid of it all!
-    function liquidateAllPositions() internal override returns (uint256) {
-        uint256 _stakedBal = stakedBalance();
-        if (_stakedBal > 0) {
-            // don't bother withdrawing zero
-            gauge.withdraw(_stakedBal);
-        }
-        return balanceOfWant();
-    }
-
-    function prepareMigration(address _newStrategy) internal override {
-        uint256 _stakedBal = stakedBalance();
-        if (_stakedBal > 0) {
-            gauge.withdraw(_stakedBal);
-        }
-    }
-
-    function protectedTokens() internal view override returns (address[] memory) {}
-
-    /* ========== SETTERS ========== */
-
-    // These functions are useful for setting parameters of the strategy that may need to be adjusted.
-
-    // Set the amount of CRV to be locked in veCRV voter from each harvest. Default is 10%.
-    function setKeepCRV(uint256 _keepCRV) external onlyAuthorized {
-        require(_keepCRV <= 10_000);
-        keepCRV = _keepCRV;
-    }
-
-    function setVoter(address _voter) external onlyGovernance {
-        voter = _voter;
-    }
-
-    // This allows us to manually harvest with our keeper as needed
-    function setForceHarvestTriggerOnce(bool _forceHarvestTriggerOnce) external onlyAuthorized {
-        forceHarvestTriggerOnce = _forceHarvestTriggerOnce;
-    }
-}
+import "./StrategyCurveBase.sol";
 
 contract StrategyCurveaTricrypto is StrategyCurveBase {
     /* ========== STATE VARIABLES ========== */
@@ -149,13 +25,13 @@ contract StrategyCurveaTricrypto is StrategyCurveBase {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _vault, string memory _name) public StrategyCurveBase(_vault) {
+    constructor(address _vault, address _gauge, string memory _name) public StrategyCurveBase(_vault, _gauge) {
         // You can set these parameters on deployment to whatever you want
         maxReportDelay = 1 days; // 1 day in seconds
         healthCheck = 0x6fD0f710f30d4dC72840aE4e263c22d3a9885D3B;
 
         // these are our standard approvals. want = Curve LP token
-        want.approve(address(gauge), type(uint256).max);
+        want.approve(address(_gauge), type(uint256).max);
         crv.approve(address(crvRouter), type(uint256).max);
         wavax.approve(address(mainRouter), type(uint256).max);
         weth.approve(address(mainRouter), type(uint256).max);
