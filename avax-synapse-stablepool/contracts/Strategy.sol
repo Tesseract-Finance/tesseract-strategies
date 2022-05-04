@@ -37,6 +37,9 @@ contract Strategy is BaseStrategy{
     address public targetToken;
     bool public withdrawProtection;
 
+    bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
+    uint256 public minHarvestCredit; // if we hit this amount of credit, harvest the strategy
+
     IERC20 internal constant usdt = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
     IERC20 internal constant usdc = IERC20(0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664);
     IERC20 internal constant dai = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
@@ -242,6 +245,35 @@ contract Strategy is BaseStrategy{
         return IERC20(targetToken).balanceOf(address(this)).add(lpTokenToWant(totalLpTokens));
     }
 
+
+    // our main trigger is regarding our DCA 
+    function harvestTrigger(uint256 callCostinEth)
+        public
+        view
+        override
+        returns (bool)
+    {
+        StrategyParams memory params = vault.strategies(address(this));
+
+        // harvest no matter what once we reach our maxDelay
+        if (block.timestamp.sub(params.lastReport) > maxReportDelay) {
+            return true;
+        }
+
+        // trigger if we want to manually harvest
+        if (forceHarvestTriggerOnce) {
+            return true;
+        }
+
+        // trigger if we have enough credit
+        if (vault.creditAvailable() >= minHarvestCredit) {
+            return true;
+        }
+
+        // otherwise, we don't harvest
+        return false;
+    }
+
     function prepareReturn(uint256 _debtOutstanding)
         internal
         override
@@ -285,6 +317,9 @@ contract Strategy is BaseStrategy{
                 _debtPayment = wantBalance.sub(_profit);
             }
         }
+
+        // we're done harvesting, so reset our trigger if we used it
+        forceHarvestTriggerOnce = false;
     }
 
 
@@ -403,5 +438,23 @@ contract Strategy is BaseStrategy{
           protected[0] = address(yvToken);
 
           return protected;
+    }
+
+    /* ========== SETTERS ========== */
+
+    ///@notice This allows us to manually harvest with our keeper as needed
+    function setForceHarvestTriggerOnce(bool _forceHarvestTriggerOnce)
+        external
+        onlyAuthorized
+    {
+        forceHarvestTriggerOnce = _forceHarvestTriggerOnce;
+    }
+
+    ///@notice When our strategy has this much credit, harvestTrigger will be true.
+    function setMinHarvestCredit(uint256 _minHarvestCredit)
+        external
+        onlyAuthorized
+    {
+        minHarvestCredit = _minHarvestCredit;
     }
 }
