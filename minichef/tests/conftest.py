@@ -130,7 +130,7 @@ def dai():
 
 @pytest.fixture(scope="module")
 def usdc():
-    usdcAddress = Contract("0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E")
+    usdcAddress = Contract("0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664")
     yield usdcAddress
 
 @pytest.fixture(scope="module")
