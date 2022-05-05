@@ -168,6 +168,8 @@ contract Strategy is BaseStrategy{
             targetToken = address(nusd);
             optimal = 3;
             curveId = 0;
+        } else {
+            revert("incorrect token");
         }
     }
 
