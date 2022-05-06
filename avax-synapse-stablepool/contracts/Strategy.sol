@@ -20,7 +20,6 @@ contract Strategy is BaseStrategy{
     using SafeMath for uint256;
 
     VaultAPI public yvToken;
-    uint256 public optimal = 2; // usdc as default
     uint256 public lastInvest; // default is 0
     uint256 public poolSize;
     uint256 public minTimePerInvest;// = 3600;
