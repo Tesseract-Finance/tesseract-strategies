@@ -13,7 +13,12 @@ def test_migration(
     Strategy,
     user,
     strategy,
-    minichef_vault
+    minichef_vault,
+    swapPool,
+    poolSize,
+    maxSingleInvest,
+    minTimePerInvest,
+    slippageProtectionIn,
 ):
     usdc.approve(vault, 2 ** 256 -1, {"from": user})
     vault.deposit(amount, {"from": user})
@@ -26,9 +31,11 @@ def test_migration(
     new_strategy = strategist.deploy(
         Strategy,
         vault,
-        500_000e6,
-        3600,
-        500,
+        poolSize,
+        maxSingleInvest,
+        minTimePerInvest,
+        slippageProtectionIn,
+        swapPool,
         minichef_vault,
         strategy_name
     )

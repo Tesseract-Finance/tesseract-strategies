@@ -15,7 +15,12 @@ def test_cloning(
     strategy,
     strategy_name,
     usdc,
-    Strategy
+    Strategy,
+    swapPool,
+    poolSize,
+    minTimePerInvest,
+    maxSingleInvest,
+    slippageProtectionIn
 ):
     with brownie.reverts():
         strategy.initialize(
@@ -24,9 +29,11 @@ def test_cloning(
             rewards,
             keeper,
             minichef_vault,
-            500_000e6,
-            3600,
-            500,
+            swapPool,
+            poolSize,
+            maxSingleInvest,
+            minTimePerInvest,
+            slippageProtectionIn,
             strategy_name,
             {"from": gov}
         )
@@ -39,9 +46,11 @@ def test_cloning(
             rewards,
             keeper,
             minichef_vault,
-            500_000e6,
-            3600,
-            500,
+            swapPool,
+            poolSize,
+            maxSingleInvest,
+            minTimePerInvest,
+            slippageProtectionIn,
             strategy_name,
             {"from": gov}
     )
@@ -55,9 +64,11 @@ def test_cloning(
             rewards,
             keeper,
             minichef_vault,
-            500_000e6,
-            3600,
-            500,
+            swapPool,
+            poolSize,
+            maxSingleInvest,
+            minTimePerInvest,
+            slippageProtectionIn,
             strategy_name,
             {"from": gov}
         )

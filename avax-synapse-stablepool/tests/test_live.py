@@ -13,6 +13,9 @@ def test_opsss_live(amount, whale, gov, strategy, usdc, vault, user, poolToken, 
     assert poolToken.balanceOf(strategy) == 0
     assert usdc.balanceOf(vault) > 0
     assert minichef_vault.balanceOf(strategy) == 0
+    chain.sleep(2592000)
+    chain.mine(1)
+    strategy.setDoHealthCheck(False, {"from": gov})
     strategy.harvest({"from": gov})
     assert usdc.balanceOf(vault) == 0
     genericStateOfStrat(strategy, usdc, vault)

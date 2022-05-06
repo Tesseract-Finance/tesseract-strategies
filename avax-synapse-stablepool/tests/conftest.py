@@ -95,6 +95,12 @@ def user(accounts):
 
 
 @pytest.fixture(scope="module")
+def swapPool():
+    pool = Contract("0xED2a7edd7413021d440b09D654f3b87712abAB66")
+    yield pool
+
+
+@pytest.fixture(scope="module")
 def amount(usdc, whale, user):
     _amountTransfered = 1_000 * 10 ** usdc.decimals()
     usdc.transfer(user, _amountTransfered, {"from": whale})
@@ -119,10 +125,44 @@ def minichef_vault():
     vault = Contract("0x8Befd0EC5637ADE2dF05DD169EDA7E3E541E5C00")
     yield vault
 
+@pytest.fixture(scope="function")
+def minichef_strategy():
+    strategy = Contract("0x5733d27AA452ad8D320E22d2543D6186C0Df81CE")
+    yield strategy
+
+@pytest.fixture(scope="function")
+def minichef_keeper(accounts):
+    keeper = accounts.at("0xd6697C0074860e58EC6d9c54ff6effEb3960d03b", force=True)
+    yield keeper
+
 @pytest.fixture
 def strategist(accounts):
     yield accounts[5]
 
+
+@pytest.fixture(scope="function")
+def minTimePerInvest():
+    yield 3600
+
+@pytest.fixture(scope="function")
+def slippageProtectionIn():
+    yield 50
+
+
+@pytest.fixture(scope="function")
+def maxSingleInvest(swapPool, usdc):
+    tokenIndex = swapPool.getTokenIndex(usdc.address)
+    tokenBalanceInPool = swapPool.getTokenBalance(tokenIndex)
+
+    maxBps = 10_000
+    maxPercentagePerSingleInvest = 500 #bps, 5%
+    maxInvest = (tokenBalanceInPool * maxPercentagePerSingleInvest) / maxBps
+
+    yield maxInvest
+
+@pytest.fixture(scope="function")
+def poolSize():
+    yield 4
 
 @pytest.fixture(scope="function")
 def strategy(
@@ -133,14 +173,21 @@ def strategy(
     strategist,
     healthCheck,
     minichef_vault,
-    gov
+    swapPool,
+    gov,
+    minTimePerInvest,
+    slippageProtectionIn,
+    maxSingleInvest,
+    poolSize
 ):
     strategy = strategist.deploy(
         Strategy,
         vault,
-        500_000e6,
-        3600,
-        500,
+        poolSize,
+        maxSingleInvest,
+        minTimePerInvest,
+        slippageProtectionIn,
+        swapPool,
         minichef_vault,
         strategy_name
     )
@@ -149,4 +196,9 @@ def strategy(
     vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
     strategy.setHealthCheck(healthCheck, {"from": gov})
     strategy.setDoHealthCheck(True, {"from": gov})
+    strategy.setForceHarvestTriggerOnce(True, {"from": gov})
     yield strategy
+
+@pytest.fixture(scope="session")
+def RELATIVE_APPROX():
+    yield 1e1
