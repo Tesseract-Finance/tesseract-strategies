@@ -20,8 +20,9 @@ contract Strategy is BaseStrategy{
     using SafeMath for uint256;
 
     VaultAPI public yvToken;
-    uint256 public optimal;
+    uint256 public optimal = 2; // usdc as default
     uint256 public lastInvest; // default is 0
+    uint256 public poolSize;
     uint256 public minTimePerInvest;// = 3600;
     uint256 public maxSingleInvest;// // 2 hbtc per hour default
     uint256 public slippageProtectionIn;// = 50; //out of 10000. 50 = 0.5%
@@ -33,7 +34,6 @@ contract Strategy is BaseStrategy{
     uint8 private want_decimals;
 
     uint8 public curveId;
-    uint256 public poolSize;
     address public targetToken;
     bool public withdrawProtection;
 
@@ -46,19 +46,21 @@ contract Strategy is BaseStrategy{
     IERC20 internal constant nusd = IERC20(0xCFc37A6AB183dd4aED08C204D1c2773c0b1BDf46);
     IERC20 internal constant emissionToken = IERC20(0xCA87BF3ec55372D9540437d7a86a7750B42C02f4);
     
-    ISwap public constant swapPool = ISwap(0xED2a7edd7413021d440b09D654f3b87712abAB66);
+    ISwap public swapPool;
 
     event Cloned(address indexed clone);
 
     constructor(
         address _vault,
+        uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
+        address _swapPool,
         address _yvToken,
         string memory _strategyName
     ) public BaseStrategy(_vault) {
-        _initializeStrat(_maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _yvToken, _strategyName);
+        _initializeStrat(_poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _swapPool, _yvToken, _strategyName);
     }
 
 
@@ -68,26 +70,45 @@ contract Strategy is BaseStrategy{
         address _rewards,
         address _keeper,
         address _yvToken,
+        address _swapPool,
+        uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
         string memory _strategyName
     ) external {
         _initialize(_vault, _strategist, _rewards, _keeper);
-        _initializeStrat(_maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _yvToken, _strategyName);
+        _initializeStrat(_poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _swapPool, _yvToken, _strategyName);
 
     }
 
 
     function _initializeStrat(
+        uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
+        address _swapPool,
         address _yvToken,
         string memory _strategyName
     ) internal {
+        require(_poolSize > 1 && _poolSize < 5, "incorrect pool size");
         require(want_decimals == 0, "Already Initialized");
         
+        swapPool = ISwap(_swapPool);
+
+        if (swapPool.getToken(0) == want) {
+            curveId = 0;
+        } else if (swapPool.getToken(1) == want) {
+            curveId = 1;
+        } else if (swapPool.getToken(2) == want) {
+            curveId = 2;
+        } else if (swapPool.getToken(3) == want) {
+            curveId = 3;
+        } else {
+            revert("incorrect want for curve pool");
+        }
+
         maxSingleInvest = _maxSingleInvest;
         minTimePerInvest = _minTimePerInvest;
         slippageProtectionIn = _slippageProtectionIn;
@@ -95,8 +116,6 @@ contract Strategy is BaseStrategy{
         strategyName = _strategyName;
 
         yvToken = VaultAPI(_yvToken);
-        optimal = 1;
-        curveId = 2;
         targetToken = address(usdc);
 
         _setupStatics();
@@ -111,12 +130,9 @@ contract Strategy is BaseStrategy{
         withdrawProtection = true;
         want_decimals = IERC20Extended(address(want)).decimals();
 
+        want.safeApprove(address(swapPool), type(uint256).max);
         emissionToken.approve(address(yvToken), type(uint256).max);
         emissionToken.approve(address(swapPool), type(uint256).max);
-        nusd.approve(address(swapPool), type(uint256).max);
-        dai.approve(address(swapPool), type(uint256).max);
-        usdc.approve(address(swapPool), type(uint256).max);
-        usdt.safeApprove(address(swapPool), type(uint256).max);
     }
 
 
@@ -126,6 +142,8 @@ contract Strategy is BaseStrategy{
         address _rewards,
         address _keeper,
         address _yvToken,
+        address _swapPool,
+        uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
@@ -142,7 +160,7 @@ contract Strategy is BaseStrategy{
             newStrategy := create(0, clone_code, 0x37)
         }
         
-        Strategy(newStrategy).initialize(_vault, _strategist, _rewards, _keeper, _yvToken, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _strategyName);
+        Strategy(newStrategy).initialize(_vault, _strategist, _rewards, _keeper,_yvToken, _swapPool, _poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _strategyName);
 
         emit Cloned(newStrategy);
     }
@@ -151,27 +169,27 @@ contract Strategy is BaseStrategy{
     // These functions are useful for setting parameters of the strategy that may need to be adjusted.
     // Set optimal token to sell harvested funds for depositing to Curve.
     // Default is DAI, but can be set to USDC, USDT as needed by strategist or governance.
-    function setOptimal(uint256 _optimal) external onlyAuthorized {
-        if (_optimal == 0) {
-            targetToken = address(dai);
-            optimal = 0;
-            curveId = 1;
-        } else if (_optimal == 1) {
-            targetToken = address(usdc);
-            optimal = 1;
-            curveId = 2;
-        } else if (_optimal == 2) {
-            targetToken = address(usdt);
-            optimal = 2;
-            curveId = 3;
-        } else if (_optimal == 3) {
-            targetToken = address(nusd);
-            optimal = 3;
-            curveId = 0;
-        } else {
-            revert("incorrect token");
-        }
-    }
+    // function setOptimal(uint256 _optimal) external onlyAuthorized {
+    //     if (_optimal == 0) {
+    //         targetToken = address(dai);
+    //         optimal = 0;
+    //         curveId = 1;
+    //     } else if (_optimal == 1) {
+    //         targetToken = address(usdc);
+    //         optimal = 1;
+    //         curveId = 2;
+    //     } else if (_optimal == 2) {
+    //         targetToken = address(usdt);
+    //         optimal = 2;
+    //         curveId = 3;
+    //     } else if (_optimal == 3) {
+    //         targetToken = address(nusd);
+    //         optimal = 3;
+    //         curveId = 0;
+    //     } else {
+    //         revert("incorrect token");
+    //     }
+    // }
 
     function name() external override view returns (string memory) {
         return strategyName;
