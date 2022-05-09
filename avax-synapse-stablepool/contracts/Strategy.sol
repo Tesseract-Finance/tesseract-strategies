@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import "../interfaces/curve.sol";
 import "../interfaces/IERC20Extended.sol";
+import "../interfaces/IWETH.sol";
+import "../interfaces/IUniswapV2Router02.sol";
 
 import "@tesrvaults/contracts/BaseStrategy.sol";
 
@@ -20,6 +22,11 @@ contract Strategy is BaseStrategy{
     using SafeMath for uint256;
 
     VaultAPI public yvToken;
+
+    IWETH public constant weth = IWETH(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
+
+    address public constant router = address(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506);
+
     uint256 public lastInvest; // default is 0
     uint256 public poolSize;
     uint256 public minTimePerInvest;// = 3600;
@@ -46,6 +53,7 @@ contract Strategy is BaseStrategy{
     IERC20 internal constant emissionToken = IERC20(0xCA87BF3ec55372D9540437d7a86a7750B42C02f4);
     
     ISwap public swapPool;
+    ISwap public basePool;
 
     event Cloned(address indexed clone);
 
@@ -94,18 +102,26 @@ contract Strategy is BaseStrategy{
         require(_poolSize > 1 && _poolSize < 5, "incorrect pool size");
         require(want_decimals == 0, "Already Initialized");
         
+        poolSize = _poolSize;
         swapPool = ISwap(_swapPool);
 
-        if (swapPool.getToken(0) == want) {
+        if (isWantWETH()) {
+            basePool = ISwap(_swapPool);
+            require(swapPool.getToken(0) == IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
             curveId = 0;
-        } else if (swapPool.getToken(1) == want) {
-            curveId = 1;
-        } else if (swapPool.getToken(2) == want) {
-            curveId = 2;
-        } else if (swapPool.getToken(3) == want) {
-            curveId = 3;
         } else {
-            revert("incorrect want for curve pool");
+            basePool = ISwap(_swapPool);
+            if (swapPool.getToken(0) == want) {
+                curveId = 0;
+            } else if (swapPool.getToken(1) == want) {
+                curveId = 1;
+            } else if (swapPool.getToken(2) == want) {
+                curveId = 2;
+            } else if (swapPool.getToken(3) == want) {
+                curveId = 3;
+            } else {
+                revert("incorrect want for curve pool");
+            }
         }
 
         maxSingleInvest = _maxSingleInvest;
@@ -129,7 +145,10 @@ contract Strategy is BaseStrategy{
         withdrawProtection = true;
         want_decimals = IERC20Extended(address(want)).decimals();
 
-        want.safeApprove(address(swapPool), type(uint256).max);
+        if (!isWantWETH()) {
+            want.safeApprove(address(swapPool), type(uint256).max);
+        }
+
         emissionToken.approve(address(yvToken), type(uint256).max);
         emissionToken.approve(address(swapPool), type(uint256).max);
     }
@@ -165,30 +184,9 @@ contract Strategy is BaseStrategy{
     }
 
 
-    // These functions are useful for setting parameters of the strategy that may need to be adjusted.
-    // Set optimal token to sell harvested funds for depositing to Curve.
-    // Default is DAI, but can be set to USDC, USDT as needed by strategist or governance.
-    // function setOptimal(uint256 _optimal) external onlyAuthorized {
-    //     if (_optimal == 0) {
-    //         targetToken = address(dai);
-    //         optimal = 0;
-    //         curveId = 1;
-    //     } else if (_optimal == 1) {
-    //         targetToken = address(usdc);
-    //         optimal = 1;
-    //         curveId = 2;
-    //     } else if (_optimal == 2) {
-    //         targetToken = address(usdt);
-    //         optimal = 2;
-    //         curveId = 3;
-    //     } else if (_optimal == 3) {
-    //         targetToken = address(nusd);
-    //         optimal = 3;
-    //         curveId = 0;
-    //     } else {
-    //         revert("incorrect token");
-    //     }
-    // }
+    function isWantWETH() internal view returns (bool) {
+        return address(want) == address(weth);
+    }
 
     function name() external override view returns (string memory) {
         return strategyName;
@@ -235,7 +233,7 @@ contract Strategy is BaseStrategy{
     }
 
     function virtualPriceToWant() public view returns (uint256) {
-        uint256 virtualPrice = swapPool.getVirtualPrice();
+        uint256 virtualPrice = basePool.getVirtualPrice();
 
         if (want_decimals < 18) {
             return virtualPrice.div(10 ** (uint256(uint8(18) - want_decimals)));
@@ -257,11 +255,21 @@ contract Strategy is BaseStrategy{
         return balance.mul(pricePerShare).div(1e18);
     }
 
-    function nativeToWant(uint256 _amtInWei) public view override virtual returns (uint256) {}
+    function nativeToWant(uint256 _amount) public view override virtual returns (uint256) {
+        if(_amount == 0) {
+            return _amount;
+        }
+        address[] memory path = new address[](2);
+        path[0] = address(weth);
+        path[1] = address(want);
+
+        uint256[] memory amounts = IUniswapV2Router02(router).getAmountsIn(_amount, path);
+        return amounts[amounts.length -1];
+    }
 
     function estimatedTotalAssets() public view override returns (uint256) {
         uint256 totalLpTokens = lpTokensInYVault().add(emissionToken.balanceOf(address(this)));
-        return IERC20(targetToken).balanceOf(address(this)).add(lpTokenToWant(totalLpTokens));
+        return want.balanceOf(address(this)).add(lpTokenToWant(totalLpTokens));
     }
 
 
@@ -306,7 +314,7 @@ contract Strategy is BaseStrategy{
 
         uint256 debt = vault.strategies(address(this)).totalDebt;
         uint256 currentValue = estimatedTotalAssets();
-        uint256 wantBalance = IERC20(targetToken).balanceOf(address(this));
+        uint256 wantBalance = want.balanceOf(address(this));
 
         if (debt < currentValue) {
             _profit = currentValue.sub(debt);
@@ -327,7 +335,7 @@ contract Strategy is BaseStrategy{
                 _profit = 0;
             }
 
-            wantBalance = IERC20(targetToken).balanceOf(address(this));
+            wantBalance = want.balanceOf(address(this));
 
             if(wantBalance < _profit) {
                 _profit = wantBalance;
@@ -343,7 +351,7 @@ contract Strategy is BaseStrategy{
 
 
     function withdrawSome(uint256 _amount) internal returns (uint256 _liquidatedAmount, uint256 _loss) {
-        uint256 wantBalanceBefore = IERC20(targetToken).balanceOf(address(this));
+        uint256 wantBalanceBefore = want.balanceOf(address(this));
 
         // let's take the amount we need if virtual price is real .
         uint256 virtualPrice = virtualPriceToWant();
@@ -385,7 +393,7 @@ contract Strategy is BaseStrategy{
             swapPool.removeLiquidityOneToken(toWithdraw, curveId, 0, now);
         }
 
-        uint256 diff = IERC20(targetToken).balanceOf(address(this)).sub(wantBalanceBefore);
+        uint256 diff = want.balanceOf(address(this)).sub(wantBalanceBefore);
 
         if (diff > _amount) {
             _liquidatedAmount = _amount;
@@ -400,7 +408,7 @@ contract Strategy is BaseStrategy{
         override
         returns (uint256 _liquidatedAmount, uint256 _loss)
     {
-        uint256 wantBal = IERC20(targetToken).balanceOf(address(this));
+        uint256 wantBal = want.balanceOf(address(this));
 
         if (wantBal < _amountNeeded) {
             (_liquidatedAmount, _loss) = withdrawSome(_amountNeeded.sub(wantBal));
@@ -418,9 +426,7 @@ contract Strategy is BaseStrategy{
             return;
         }
 
-        // invest the rest of the want
-
-        uint256 _wantToInvest = Math.min(IERC20(targetToken).balanceOf(address(this)), maxSingleInvest);
+        uint256 _wantToInvest = Math.min(want.balanceOf(address(this)), maxSingleInvest);
         if (_wantToInvest == 0) {
             return;
         }
@@ -428,15 +434,15 @@ contract Strategy is BaseStrategy{
         uint256 expectedOut = _wantToInvest.mul(1e18).div(virtualPriceToWant());
         uint256 maxSlip = expectedOut.mul(DENOMINATOR.sub(slippageProtectionIn)).div(DENOMINATOR);
 
-        // invest all the tokens we have
-        uint256[] memory data = new uint256[](4);
-        data[0] = nusd.balanceOf(address(this));
-        data[1] = dai.balanceOf(address(this));
-        data[2] = usdc.balanceOf(address(this));
-        data[3] = usdt.balanceOf(address(this));
-
-        if (data[0] > 0 || data[1] > 0 || data[2] > 0 || data[3] > 0) {
-            swapPool.addLiquidity(data, 0, now);
+        if (isWantWETH()) {
+            weth.withdraw(_wantToInvest);
+            uint256[2] memory amounts;
+            amounts[0] = _wantToInvest;
+            swapPool.addLiquidity{value: _wantToInvest}(amounts, maxSlip, now);
+        } else {
+            uint256[] memory amounts = new uint256[](poolSize);
+            amounts[uint256(curveId)] = _wantToInvest;
+            swapPool.addLiquidity(amounts, maxSlip, now);
         }
         // deposit lpToken 
         yvToken.deposit();
@@ -475,5 +481,9 @@ contract Strategy is BaseStrategy{
         onlyAuthorized
     {
         minHarvestCredit = _minHarvestCredit;
+    }
+
+    function getCurveId() external view returns (uint8) {
+        return curveId;
     }
 }
