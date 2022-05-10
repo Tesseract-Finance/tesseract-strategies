@@ -46,7 +46,7 @@ contract Strategy is BaseStrategy{
     bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
     uint256 public minHarvestCredit; // if we hit this amount of credit, harvest the strategy
 
-    IERC20 internal constant emissionToken = IERC20(0xCA87BF3ec55372D9540437d7a86a7750B42C02f4);
+    IERC20 public lpToken;
     
     ISwap public swapPool;
     ISwap public basePool;
@@ -60,10 +60,11 @@ contract Strategy is BaseStrategy{
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
         address _swapPool,
+        address _lpToken,
         address _yvToken,
         string memory _strategyName
     ) public BaseStrategy(_vault) {
-        _initializeStrat(_poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _swapPool, _yvToken, _strategyName);
+        _initializeStrat(_poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _swapPool, _yvToken, _lpToken, _strategyName);
     }
 
 
@@ -74,6 +75,7 @@ contract Strategy is BaseStrategy{
         address _keeper,
         address _yvToken,
         address _swapPool,
+        address _lpToken,
         uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
@@ -81,7 +83,7 @@ contract Strategy is BaseStrategy{
         string memory _strategyName
     ) external {
         _initialize(_vault, _strategist, _rewards, _keeper);
-        _initializeStrat(_poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _swapPool, _yvToken, _strategyName);
+        _initializeStrat(_poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _swapPool, _yvToken, _lpToken, _strategyName);
 
     }
 
@@ -93,6 +95,7 @@ contract Strategy is BaseStrategy{
         uint256 _slippageProtectionIn,
         address _swapPool,
         address _yvToken,
+        address _lpToken,
         string memory _strategyName
     ) internal {
         require(_poolSize > 1 && _poolSize < 5, "incorrect pool size");
@@ -100,6 +103,7 @@ contract Strategy is BaseStrategy{
         
         poolSize = _poolSize;
         swapPool = ISwap(_swapPool);
+        lpToken = IERC20(_lpToken);
 
         if (isWantWETH()) {
             basePool = ISwap(_swapPool);
@@ -144,8 +148,8 @@ contract Strategy is BaseStrategy{
             want.safeApprove(address(swapPool), type(uint256).max);
         }
 
-        emissionToken.approve(address(yvToken), type(uint256).max);
-        emissionToken.approve(address(swapPool), type(uint256).max);
+        lpToken.approve(address(yvToken), type(uint256).max);
+        lpToken.approve(address(swapPool), type(uint256).max);
     }
 
 
@@ -156,6 +160,7 @@ contract Strategy is BaseStrategy{
         address _keeper,
         address _yvToken,
         address _swapPool,
+        address _lpToken,
         uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
@@ -173,7 +178,7 @@ contract Strategy is BaseStrategy{
             newStrategy := create(0, clone_code, 0x37)
         }
         
-        Strategy(newStrategy).initialize(_vault, _strategist, _rewards, _keeper,_yvToken, _swapPool, _poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _strategyName);
+        Strategy(newStrategy).initialize(_vault, _strategist, _rewards, _keeper,_yvToken, _swapPool, _lpToken, _poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _strategyName);
 
         emit Cloned(newStrategy);
     }
@@ -263,7 +268,7 @@ contract Strategy is BaseStrategy{
     }
 
     function estimatedTotalAssets() public view override returns (uint256) {
-        uint256 totalLpTokens = lpTokensInYVault().add(emissionToken.balanceOf(address(this)));
+        uint256 totalLpTokens = lpTokensInYVault().add(lpToken.balanceOf(address(this)));
         return want.balanceOf(address(this)).add(lpTokenToWant(totalLpTokens));
     }
 
@@ -352,7 +357,7 @@ contract Strategy is BaseStrategy{
         uint256 virtualPrice = virtualPriceToWant();
         uint256 amountWeNeedFromVirtualPrice = _amount.mul(1e18).div(virtualPrice);
 
-        uint256 lpTokenBeforeBalance = emissionToken.balanceOf(address(this)); //should be zero but just incase...
+        uint256 lpTokenBeforeBalance = lpToken.balanceOf(address(this)); //should be zero but just incase...
 
         uint256 pricePerFullShare = yvToken.pricePerShare();
 
@@ -376,7 +381,7 @@ contract Strategy is BaseStrategy{
             }
         }
 
-        uint256 toWithdraw = emissionToken.balanceOf(address(this)).sub(lpTokenBeforeBalance);
+        uint256 toWithdraw = lpToken.balanceOf(address(this)).sub(lpTokenBeforeBalance);
 
         if (toWithdraw > 0) {
             //if we have less than 18 decimals we need to lower the amount out

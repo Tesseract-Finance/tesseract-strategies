@@ -178,7 +178,8 @@ def strategy(
     minTimePerInvest,
     slippageProtectionIn,
     maxSingleInvest,
-    poolSize
+    poolSize,
+    poolToken
 ):
     strategy = strategist.deploy(
         Strategy,
@@ -188,6 +189,7 @@ def strategy(
         minTimePerInvest,
         slippageProtectionIn,
         swapPool,
+        poolToken,
         minichef_vault,
         strategy_name
     )

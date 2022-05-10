@@ -20,7 +20,8 @@ def test_cloning(
     poolSize,
     minTimePerInvest,
     maxSingleInvest,
-    slippageProtectionIn
+    slippageProtectionIn,
+    poolToken
 ):
     with brownie.reverts():
         strategy.initialize(
@@ -30,6 +31,7 @@ def test_cloning(
             keeper,
             minichef_vault,
             swapPool,
+            poolToken,
             poolSize,
             maxSingleInvest,
             minTimePerInvest,
@@ -47,6 +49,7 @@ def test_cloning(
             keeper,
             minichef_vault,
             swapPool,
+            poolToken,
             poolSize,
             maxSingleInvest,
             minTimePerInvest,
@@ -65,6 +68,7 @@ def test_cloning(
             keeper,
             minichef_vault,
             swapPool,
+            poolToken,
             poolSize,
             maxSingleInvest,
             minTimePerInvest,

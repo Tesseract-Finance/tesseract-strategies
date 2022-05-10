@@ -20,7 +20,8 @@ def test_migration(
     minTimePerInvest,
     slippageProtectionIn,
     minichef_strategy,
-    minichef_keeper
+    minichef_keeper,
+    poolToken
 ):
     usdc.approve(vault, 2 ** 256 -1, {"from": user})
     vault.deposit(amount, {"from": user})
@@ -38,6 +39,7 @@ def test_migration(
         minTimePerInvest,
         slippageProtectionIn,
         swapPool,
+        poolToken,
         minichef_vault,
         strategy_name
     )
