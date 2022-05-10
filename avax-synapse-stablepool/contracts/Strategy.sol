@@ -127,7 +127,6 @@ contract Strategy is BaseStrategy{
         strategyName = _strategyName;
 
         yvToken = VaultAPI(_yvToken);
-        targetToken = address(usdc);
 
         _setupStatics();
     }
@@ -437,7 +436,7 @@ contract Strategy is BaseStrategy{
             swapPool.addLiquidity{value: _wantToInvest}(amounts, maxSlip, now);
         } else {
             uint256[] memory amounts = new uint256[](poolSize);
-            amounts[uint256(curveId)] = _wantToInvest;
+            amounts[curveId] = _wantToInvest;
             swapPool.addLiquidity(amounts, maxSlip, now);
         }
         // deposit lpToken 
