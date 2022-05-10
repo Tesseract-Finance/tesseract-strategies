@@ -263,7 +263,7 @@ contract Strategy is BaseStrategy{
         path[0] = address(weth);
         path[1] = address(want);
 
-        uint256[] memory amounts = IUniswapV2Router02(router).getAmountsIn(_amount, path);
+        uint256[] memory amounts = IUniswapV2Router02(router).getAmountsOut(_amount, path);
         return amounts[amounts.length -1];
     }
 
