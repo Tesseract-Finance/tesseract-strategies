@@ -44,7 +44,7 @@ contract Strategy is BaseStrategy{
     bool public withdrawProtection;
 
     bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
-    uint256 public minHarvestCredit; // if we hit this amount of credit, harvest the strategy
+    
 
     IERC20 public lpToken;
     
@@ -292,11 +292,6 @@ contract Strategy is BaseStrategy{
             return true;
         }
 
-        // trigger if we have enough credit
-        if (vault.creditAvailable() >= minHarvestCredit) {
-            return true;
-        }
-
         // otherwise, we don't harvest
         return false;
     }
@@ -455,6 +450,13 @@ contract Strategy is BaseStrategy{
 
     function prepareMigration(address _strategy) internal override {
         yvToken.transfer(_strategy, yvToken.balanceOf(address(this)));
+
+        if (isWantWETH()) {
+            uint256 ethBalance = address(this).balance;
+            if (ethBalance > 0) {
+                weth.deposit{value: ethBalance}();
+            }
+        }
     }
 
     function protectedTokens()

@@ -26,11 +26,10 @@ def test_setters(
     # print("\nShould we harvest? Should be false.", tx)
     # assert tx == False
 
-    strategy.setMinHarvestCredit(0, {"from": gov})
+
     tx = strategy.harvestTrigger(0, {"from": gov})
     print("\nShould we harvest? Should be true.", tx)
     assert tx == True
-    strategy.setMinHarvestCredit(2 ** 256 - 1, {"from": gov})
 
     # test our manual harvest trigger, and that a harvest turns it off
     strategy.setForceHarvestTriggerOnce(True, {"from": gov})
