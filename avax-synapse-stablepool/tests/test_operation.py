@@ -8,7 +8,7 @@ import brownie
 import pytest
 
 
-def test_operation(strategy, usdc, user, poolToken, gov, amount, RELATIVE_APPROX, vault):
+def test_operation(strategy, usdc, user, poolToken, gov, amount, RELATIVE_APPROX, vault, minichef_strategy, minichef_keeper):
     # Deposit to the vault
     user_balance_before = usdc.balanceOf(user)
     usdc.approve(vault.address, amount, {"from": user})
@@ -23,8 +23,14 @@ def test_operation(strategy, usdc, user, poolToken, gov, amount, RELATIVE_APPROX
     # tend()
     strategy.tend()
 
+    minichef_strategy.harvest({"from": minichef_keeper})
+    chain.sleep(3600 * 6)  # 6 hrs needed for profits to unlock
+    chain.mine(1)
+
+    strategy.harvest()
+    
     # withdrawal
-    vault.withdraw({"from": user})
+    vault.withdraw(amount, {"from": user})
     assert (
         pytest.approx(usdc.balanceOf(user), rel=RELATIVE_APPROX) == user_balance_before
     )

@@ -19,6 +19,8 @@ def test_migration(
     maxSingleInvest,
     minTimePerInvest,
     slippageProtectionIn,
+    minichef_strategy,
+    minichef_keeper
 ):
     usdc.approve(vault, 2 ** 256 -1, {"from": user})
     vault.deposit(amount, {"from": user})
@@ -75,8 +77,12 @@ def test_migration(
     print("\nVault starting assets with new strategy: ", startingVault)
 
     # simulate one day of earnings
-    chain.sleep(86400)
+
+    minichef_strategy.harvest({"from": minichef_keeper})
+    chain.sleep(3600 * 6)  # 6 hrs needed for profits to unlock
     chain.mine(1)
+
+    strategy.harvest()
 
     # Test out our migrated strategy, confirm we're making a profit
     new_strategy.setDoHealthCheck(False, {"from": gov})
