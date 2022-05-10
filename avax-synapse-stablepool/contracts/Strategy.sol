@@ -478,16 +478,4 @@ contract Strategy is BaseStrategy{
     {
         forceHarvestTriggerOnce = _forceHarvestTriggerOnce;
     }
-
-    ///@notice When our strategy has this much credit, harvestTrigger will be true.
-    function setMinHarvestCredit(uint256 _minHarvestCredit)
-        external
-        onlyAuthorized
-    {
-        minHarvestCredit = _minHarvestCredit;
-    }
-
-    function getCurveId() external view returns (uint8) {
-        return curveId;
-    }
 }
