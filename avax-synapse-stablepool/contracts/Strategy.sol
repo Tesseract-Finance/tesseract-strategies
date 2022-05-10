@@ -40,7 +40,6 @@ contract Strategy is BaseStrategy{
     uint8 private want_decimals;
 
     uint8 public curveId;
-    address public targetToken;
     bool public withdrawProtection;
 
     bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
