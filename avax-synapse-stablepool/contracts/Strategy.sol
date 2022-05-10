@@ -391,6 +391,10 @@ contract Strategy is BaseStrategy{
             }
 
             swapPool.removeLiquidityOneToken(toWithdraw, curveId, 0, now);
+
+            if(isWantWETH()) {
+                weth.deposit{value: address(this).balance}();
+            }
         }
 
         uint256 diff = want.balanceOf(address(this)).sub(wantBalanceBefore);
