@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 
 import "./interfaces/curve.sol";
 import "./interfaces/IERC20Extended.sol";
+import "./interfaces/IUniswapV2Router02.sol";
+import "./interfaces/IWETH.sol";
 
 import "@tesrvaults/contracts/BaseStrategy.sol";
 
@@ -19,8 +21,13 @@ contract Strategy is BaseStrategy {
     using SafeMath for uint256;
 
     ICurveFi public curve;
-    ICrvV3 public curveToken;
+    ICurveFi public basePool;
+    IERC20 public curveToken;
     VaultAPI public yvToken;
+
+    IWETH public constant weth = IWETH(0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7);
+
+    address public constant router = address(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506);
 
     uint256 public optimal = 2;
     uint256 public lastInvest; // default is 0
@@ -33,24 +40,17 @@ contract Strategy is BaseStrategy {
 
     uint8 private want_decimals;
 
+    bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
+
     uint256 public curveId;
     uint256 public poolSize;
-    address public metaToken;
-    address public targetToken;
     bool public withdrawProtection;
-    bool internal forceHarvestTriggerOnce; // only set this to true externally when we want to trigger our keepers to harvest for us
-    uint256 public minHarvestCredit; // if we hit this amount of credit, harvest the strategy
-
-    IERC20 internal constant wbtc = IERC20(0x50b7545627a5162F82A992c33b87aDc75187B218);
-    IERC20 internal constant weth = IERC20(0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB);
-    IERC20 internal constant usdt = IERC20(0xc7198437980c041c805A1EDcbA50c1Ce5db95118);
-    IERC20 internal constant usdc = IERC20(0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664);
-    IERC20 internal constant dai = IERC20(0xd586E7F844cEa2F87f50152665BCbc2C279D8d70);
 
     event Cloned(address indexed clone);
 
     constructor(
         address _vault,
+        uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
@@ -63,6 +63,7 @@ contract Strategy is BaseStrategy {
     function initialize(
         address _vault,
         address _strategist,
+        uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
@@ -73,10 +74,11 @@ contract Strategy is BaseStrategy {
     ) external {
         //note: initialise can only be called once. in _initialize in BaseStrategy we have: require(address(want) == address(0), "Strategy already initialized");
         _initialize(_vault, _strategist, _strategist, _strategist);
-        _initializeStrat(_maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _curve, _curveToken, _yvToken, _strategyName);
+        _initializeStrat(_poolSize, _maxSingleInvest, _minTimePerInvest, _slippageProtectionIn, _curve, _curveToken, _yvToken, _strategyName);
     }
 
     function _initializeStrat(
+        uint256 _poolSize,
         uint256 _maxSingleInvest,
         uint256 _minTimePerInvest,
         uint256 _slippageProtectionIn,
@@ -86,16 +88,39 @@ contract Strategy is BaseStrategy {
         string memory _strategyName
     ) internal {
         require(want_decimals == 0, "Already Initialize");
+        require(_poolSize > 1 && _poolSize < 5, "incorrect pool size");
 
+        poolSize = _poolSize;
         curve = ICurveFi(_curve);
+        yvToken = VaultAPI(_yvToken);
+        curveToken = IERC20(_curveToken);
+
+        if (isWantWETH()) {
+            basePool = ICurveFi(_curve);
+            require(curve.underlying_coins(curveId) == address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE));
+            curveId = 0;
+        } else {
+            basePool = ICurveFi(_curve);
+            if (curve.underlying_coins(0) == address(want)) {
+                curveId = 0;
+            } else if (curve.underlying_coins(1) == address(want)) {
+                curveId = 1;
+            } else if (curve.underlying_coins(2) == address(want)) {
+                curveId = 2;
+            } else if (curve.underlying_coins(3) == address(want)) {
+                curveId = 3;
+            } else if (curve.underlying_coins(4) == address(want)) {
+                curveId = 4;
+            } else {
+                revert("incorrect want for curve pool");
+            }
+        }
+
         maxSingleInvest = _maxSingleInvest;
         minTimePerInvest = _minTimePerInvest;
         slippageProtectionIn = _slippageProtectionIn;
         slippageProtectionOut = _slippageProtectionIn; // use In to start with to save on stack
         strategyName = _strategyName;
-
-        yvToken = VaultAPI(_yvToken);
-        curveToken = ICrvV3(_curveToken);
 
         _setupStatics();
     }
@@ -108,22 +133,12 @@ contract Strategy is BaseStrategy {
         withdrawProtection = true;
         want_decimals = IERC20Extended(address(want)).decimals();
 
-        //deposit contract needs permissions
-        if (metaToken != address(0)) {
-            IERC20(metaToken).safeApprove(address(curve), type(uint256).max);
-            curveToken.approve(address(curve), type(uint256).max);
+        if (!isWantWETH()) {
+            want.safeApprove(address(curve), type(uint256).max);
         }
 
         curveToken.approve(address(yvToken), type(uint256).max);
-
-        // these are our approvals and path specific to this contract
-        wbtc.approve(address(curve), type(uint256).max);
-        weth.approve(address(curve), type(uint256).max);
-        usdt.safeApprove(address(curve), type(uint256).max);
-        dai.approve(address(curve), type(uint256).max);
-        usdc.approve(address(curve), type(uint256).max);
-
-        targetToken = address(usdt);
+        curveToken.approve(address(curve), type(uint256).max);
     }
 
     function cloneCurve(
@@ -136,8 +151,6 @@ contract Strategy is BaseStrategy {
         address _curveToken,
         address _yvToken,
         uint256 _poolSize,
-        address _metaToken,
-        bool _hasUnderlying,
         string memory _strategyName
     ) external returns (address payable newStrategy) {
         bytes20 addressBytes = bytes20(address(this));
@@ -154,6 +167,7 @@ contract Strategy is BaseStrategy {
         Strategy(newStrategy).initialize(
             _vault,
             _strategist,
+            _poolSize,
             _maxSingleInvest,
             _minTimePerInvest,
             _slippageProtectionIn,
@@ -164,6 +178,10 @@ contract Strategy is BaseStrategy {
         );
 
         emit Cloned(newStrategy);
+    }
+
+    function isWantWETH() internal view returns (bool) {
+        return address(want) == address(weth);
     }
 
     function name() external view override returns (string memory) {
@@ -196,10 +214,20 @@ contract Strategy is BaseStrategy {
 
     function estimatedTotalAssets() public view override returns (uint256) {
         uint256 totalCurveTokens = curveTokensInYVault().add(curveToken.balanceOf(address(this)));
-        return IERC20(targetToken).balanceOf(address(this)).add(curveTokenToWant(totalCurveTokens));
+        return want.balanceOf(address(this)).add(curveTokenToWant(totalCurveTokens));
     }
 
-    function nativeToWant(uint256 _amtInWei) public view virtual override returns (uint256) {}
+    function nativeToWant(uint256 _amount) public view virtual override returns (uint256) {
+        if (_amount == 0) {
+            return _amount;
+        }
+        address[] memory path = new address[](2);
+        path[0] = address(weth);
+        path[1] = address(want);
+
+        uint256[] memory amounts = IUniswapV2Router02(router).getAmountsOut(_amount, path);
+        return amounts[amounts.length - 1];
+    }
 
     // retruns value of total
     function curveTokenToWant(uint256 tokens) public view returns (uint256) {
@@ -207,7 +235,13 @@ contract Strategy is BaseStrategy {
             return 0;
         }
 
-        return virtualPriceToWant().mul(tokens).div(1e18);
+        //we want to choose lower value of virtual price and amount we really get out
+        //this means we will always underestimate current assets.
+        uint256 virtualOut = virtualPriceToWant().mul(tokens).div(1e18);
+
+        uint256 realOut = curve.calc_withdraw_one_coin(tokens, int128(curveId));
+
+        return Math.min(virtualOut, realOut);
     }
 
     // we lose some precision here. but it shouldnt matter as we are underestimating
@@ -282,7 +316,7 @@ contract Strategy is BaseStrategy {
 
     //safe to enter more than we have
     function withdrawSome(uint256 _amount) internal returns (uint256 _liquidatedAmount, uint256 _loss) {
-        uint256 wantBalanceBefore = IERC20(targetToken).balanceOf(address(this));
+        uint256 wantBalanceBefore = want.balanceOf(address(this));
 
         //let's take the amount we need if virtual price is real. Let's add the
         uint256 virtualPrice = virtualPriceToWant();
@@ -321,9 +355,13 @@ contract Strategy is BaseStrategy {
             }
 
             curve.remove_liquidity_one_coin(toWithdraw, curveId, maxSlippage);
+
+            if (isWantWETH()) {
+                weth.deposit{value: address(this).balance}();
+            }
         }
 
-        uint256 diff = IERC20(targetToken).balanceOf(address(this)).sub(wantBalanceBefore);
+        uint256 diff = want.balanceOf(address(this)).sub(wantBalanceBefore);
 
         if (diff > _amount) {
             _liquidatedAmount = _amount;
@@ -333,13 +371,31 @@ contract Strategy is BaseStrategy {
         }
     }
 
+    // our main trigger is regarding our DCA
+    function harvestTrigger(uint256 callCostinEth) public view override returns (bool) {
+        StrategyParams memory params = vault.strategies(address(this));
+
+        // harvest no matter what once we reach our maxDelay
+        if (block.timestamp.sub(params.lastReport) > maxReportDelay) {
+            return true;
+        }
+
+        // trigger if we want to manually harvest
+        if (forceHarvestTriggerOnce) {
+            return true;
+        }
+
+        // otherwise, we don't harvest
+        return false;
+    }
+
     function adjustPosition(uint256 _debtOutstanding) internal override {
         if (lastInvest.add(minTimePerInvest) > block.timestamp) {
             return;
         }
 
         // Invest the rest of the want
-        uint256 _wantToInvest = Math.min(IERC20(targetToken).balanceOf(address(this)), maxSingleInvest);
+        uint256 _wantToInvest = Math.min(want.balanceOf(address(this)), maxSingleInvest);
         if (_wantToInvest == 0) {
             return;
         }
@@ -347,32 +403,15 @@ contract Strategy is BaseStrategy {
         uint256 expectedOut = _wantToInvest.mul(1e18).div(virtualPriceToWant());
         uint256 maxSlip = expectedOut.mul(DENOMINATOR.sub(slippageProtectionIn)).div(DENOMINATOR);
 
-        // deposit our balance to Curve if we have any
-        if (optimal == 0) {
-            uint256 daiBalance = dai.balanceOf(address(this));
-            if (daiBalance > 0) {
-                curve.add_liquidity([daiBalance, 0, 0, 0, 0], maxSlip);
-            }
-        } else if (optimal == 1) {
-            uint256 usdcBalance = usdc.balanceOf(address(this));
-            if (usdcBalance > 0) {
-                curve.add_liquidity([0, usdcBalance, 0, 0, 0], maxSlip);
-            }
-        } else if (optimal == 2) {
-            uint256 usdtBalance = usdt.balanceOf(address(this));
-            if (usdtBalance > 0) {
-                curve.add_liquidity([0, 0, usdtBalance, 0, 0], maxSlip);
-            }
-        } else if (optimal == 3) {
-            uint256 wbtcBalance = wbtc.balanceOf(address(this));
-            if (wbtcBalance > 0) {
-                curve.add_liquidity([0, 0, 0, wbtcBalance, 0], maxSlip);
-            }
+        if (isWantWETH()) {
+            weth.withdraw(_wantToInvest);
+            uint256[2] memory amounts;
+            amounts[0] = _wantToInvest;
+            curve.add_liquidity{value: _wantToInvest}(amounts, maxSlip);
         } else {
-            uint256 wethBalance = weth.balanceOf(address(this));
-            if (wethBalance > 0) {
-                curve.add_liquidity([0, 0, 0, 0, wethBalance], maxSlip);
-            }
+            uint256[] memory amounts = new uint256[](poolSize);
+            amounts[curveId] = _wantToInvest;
+            ICurveFi(curve).add_liquidity(amounts, maxSlip);
         }
 
         //now add to yearn
@@ -381,7 +420,7 @@ contract Strategy is BaseStrategy {
     }
 
     function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss) {
-        uint256 wantBal = IERC20(targetToken).balanceOf(address(this));
+        uint256 wantBal = want.balanceOf(address(this));
 
         if (wantBal < _amountNeeded) {
             (_liquidatedAmount, _loss) = withdrawSome(_amountNeeded.sub(wantBal));
@@ -396,6 +435,13 @@ contract Strategy is BaseStrategy {
 
     function prepareMigration(address _newStrategy) internal override {
         yvToken.transfer(_newStrategy, yvToken.balanceOf(address(this)));
+
+        if (isWantWETH()) {
+            uint256 ethBalance = address(this).balance;
+            if (ethBalance > 0) {
+                weth.deposit{value: ethBalance}();
+            }
+        }
     }
 
     function protectedTokens() internal view override returns (address[] memory) {
@@ -407,42 +453,8 @@ contract Strategy is BaseStrategy {
 
     /* ========== SETTERS ========== */
 
-    // These functions are useful for setting parameters of the strategy that may need to be adjusted.
-    // Set optimal token to sell harvested funds for depositing to Curve.
-    // Default is DAI, but can be set to USDC, USDT, WBTC, WETH as needed by strategist or governance.
-    function setOptimal(uint256 _optimal) external onlyAuthorized {
-        if (_optimal == 0) {
-            targetToken = address(dai);
-            optimal = 0;
-            curveId = 0;
-        } else if (_optimal == 1) {
-            targetToken = address(usdc);
-            optimal = 1;
-            curveId = 1;
-        } else if (_optimal == 2) {
-            targetToken = address(usdt);
-            optimal = 2;
-            curveId = 2;
-        } else if (_optimal == 3) {
-            targetToken = address(wbtc);
-            optimal = 3;
-            curveId = 3;
-        } else if (_optimal == 4) {
-            targetToken = address(weth);
-            optimal = 4;
-            curveId = 4;
-        } else {
-            revert("incorrect token");
-        }
-    }
-
     ///@notice This allows us to manually harvest with our keeper as needed
     function setForceHarvestTriggerOnce(bool _forceHarvestTriggerOnce) external onlyAuthorized {
         forceHarvestTriggerOnce = _forceHarvestTriggerOnce;
-    }
-
-    ///@notice When our strategy has this much credit, harvestTrigger will be true.
-    function setMinHarvestCredit(uint256 _minHarvestCredit) external onlyAuthorized {
-        minHarvestCredit = _minHarvestCredit;
     }
 }
