@@ -2,13 +2,9 @@
 __pycache__
 .history
 .hypothesis/
-curve-lp/build/
+build/
 reports/
 .env
 
 # Node/npm
 node_modules/
-.DS_Store
-
-#ide
-.idea

@@ -1,5 +1,14 @@
 import pytest
 from brownie import config, Wei, Contract, interface
+from enum import Enum
+
+class PoolTypes(Enum):
+    ATRICRYPTO = 1
+    AAVE = 2
+
+@pytest.fixture(scope="module", params=[PoolTypes.ATRICRYPTO, PoolTypes.AAVE])
+def poolType(request):
+    yield request.param
 
 # Snapshots the chain before each test and reverts after test completion.
 @pytest.fixture(autouse=True)
@@ -8,47 +17,70 @@ def isolation(fn_isolation):
 
 
 @pytest.fixture(scope="module")
-def whale(accounts):
+def whale(accounts, poolType):
+    whaleAddress = ""
+    if (poolType == PoolTypes.ATRICRYPTO):
+        whaleAddress = "0x445fe580ef8d70ff569ab36e80c647af338db351"
+    elif (poolType == PoolTypes.AAVE):
+        whaleAddress = "0xb755b949c126c04e0348dd881a5cf55d424742b2"
+
     # Totally in it for the tech
     # Update this with a large holder of your want token (the largest EOA holder of LP)
-    whale = accounts.at("0x5b35d02ec6262b42bf0eceb1fdf9f7950d8055e1", force=True)
+    whale = accounts.at(whaleAddress, force=True)
     yield whale
 
 
 # this is the amount of funds we have our whale deposit. adjust this as needed based on their wallet balance
 @pytest.fixture(scope="module")
-def amount():
-    amount = 50e18
+def amount(poolType):
+    amount = 0
+    if (poolType == PoolTypes.ATRICRYPTO):
+        amount = 50e18
+    elif (poolType == PoolTypes.AAVE):
+        amount = 1e18 * 1_000_000
+
     yield amount
 
 
 # this is the name we want to give our strategy
 @pytest.fixture(scope="module")
 def strategy_name():
-    strategy_name = "StrategyCurveaTricrypto"
+    strategy_name = "CurveLpGaugeStrategy"
     yield strategy_name
 
 
 # gauge for the curve pool
 @pytest.fixture(scope="module")
-def gauge():
-    # this should be the address of the convex deposit token
-    gauge = "0x445FE580eF8d70FF569aB36e80c647af338db351"
+def gauge(poolType):
+    gauge = ""
+    if (poolType == PoolTypes.ATRICRYPTO):
+        gauge = "0x445FE580eF8d70FF569aB36e80c647af338db351"
+    elif (poolType == PoolTypes.AAVE):
+        gauge = "0x5B5CFE992AdAC0C9D48E05854B2d91C73a003858"
+
     yield interface.IGauge(gauge)
 
 
 # curve deposit pool
 @pytest.fixture(scope="module")
-def pool():
-    poolAddress = Contract("0x58e57cA18B7A47112b877E31929798Cd3D703b0f")
+def pool(poolType):
+    poolAddress = ""
+    if (poolType == PoolTypes.ATRICRYPTO):
+        poolAddress = "0x58e57cA18B7A47112b877E31929798Cd3D703b0f"
+    elif (poolType == PoolTypes.AAVE):
+        poolAddress = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"
     yield poolAddress
 
 
 # Define relevant tokens and contracts in this section
 @pytest.fixture(scope="module")
-def token():
+def token(poolType):
     # this should be the address of the ERC-20 used by the strategy/vault
-    token_address = "0x1daB6560494B04473A0BE3E7D83CF3Fdf3a51828"
+    token_address = ""
+    if (poolType == PoolTypes.ATRICRYPTO):
+        token_address = "0x1daB6560494B04473A0BE3E7D83CF3Fdf3a51828"
+    elif (poolType == PoolTypes.AAVE):
+        token_address = "0x1337BedC9D22ecbe766dF105c9623922A27963EC"
     yield Contract(token_address)
 
 
@@ -93,13 +125,13 @@ def zero_address():
 # normal gov is ychad, 0xFEB4acf3df3cDEA7399794D0869ef76A6EfAff52
 @pytest.fixture(scope="module")
 def gov(accounts):
-    yield accounts.at("0xd131Ff7caF3a2EdD4B1741dd8fC2F9A92A13cD25", force=True)
+    yield accounts.at("0xe263A668bf09d0122Fa7f7fB3a8Df61fC8DA95De", force=True)
 
 
 @pytest.fixture(scope="module")
 def strategist_ms(accounts):
     # set this to gov for polygon for now
-    yield accounts.at("0xd131Ff7caF3a2EdD4B1741dd8fC2F9A92A13cD25", force=True)
+    yield accounts.at("0xe263A668bf09d0122Fa7f7fB3a8Df61fC8DA95De", force=True)
 
 
 @pytest.fixture(scope="module")
@@ -126,12 +158,16 @@ def management(accounts):
 def strategist(accounts):
     yield accounts.at("0xBedf3Cf16ba1FcE6c3B751903Cf77E51d51E05b8", force=True)
 
-
-# # list any existing strategies here
-# @pytest.fixture(scope="module")
-# def LiveStrategy_1():
-#     yield Contract("0xC1810aa7F733269C39D640f240555d0A4ebF4264")
-
+@pytest.fixture(scope="module")
+def strategyToDeploy(
+    StrategyCurveaTricrypto,
+    StrategyCurveAave,
+    poolType
+):
+    if (poolType == PoolTypes.ATRICRYPTO):
+        yield StrategyCurveaTricrypto
+    elif (poolType == PoolTypes.AAVE):
+        yield StrategyCurveAave
 
 # use this if you need to deploy the vault
 @pytest.fixture(scope="function")
@@ -144,18 +180,10 @@ def vault(pm, gov, rewards, guardian, management, token, chain):
     chain.sleep(1)
     yield vault
 
-
-# use this if your vault is already deployed
-# @pytest.fixture(scope="function")
-# def vault(pm, gov, rewards, guardian, management, token, chain):
-#     vault = Contract("0x497590d2d57f05cf8B42A36062fA53eBAe283498")
-#     yield vault
-
-
 # replace the first value with the name of your strategy
 @pytest.fixture(scope="function")
 def strategy(
-    StrategyCurveaTricrypto,
+    strategyToDeploy,
     strategist,
     keeper,
     vault,
@@ -172,8 +200,9 @@ def strategy(
 ):
     # make sure to include all constructor parameters needed here
     strategy = strategist.deploy(
-        StrategyCurveaTricrypto,
+        strategyToDeploy,
         vault,
+        gauge,
         strategy_name,
     )
     strategy.setKeeper(keeper, {"from": gov})
@@ -188,11 +217,3 @@ def strategy(
     strategy.harvest({"from": gov})
     chain.sleep(1)
     yield strategy
-
-
-# use this if your strategy is already deployed
-# @pytest.fixture(scope="function")
-# def strategy():
-#     # parameters for this are: strategy, vault, max deposit, minTimePerInvest, slippage protection (10000 = 100% slippage allowed),
-#     strategy = Contract("0xC1810aa7F733269C39D640f240555d0A4ebF4264")
-#     yield strategy
