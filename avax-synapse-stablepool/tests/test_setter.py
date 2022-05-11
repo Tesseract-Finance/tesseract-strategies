@@ -27,6 +27,8 @@ def test_setters(
     # assert tx == False
 
 
+    chain.sleep(86400 * 30)
+    chain.mine(1)
     tx = strategy.harvestTrigger(0, {"from": gov})
     print("\nShould we harvest? Should be true.", tx)
     assert tx == True
