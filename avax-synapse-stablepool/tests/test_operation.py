@@ -28,7 +28,7 @@ def test_operation(strategy, usdc, user, poolToken, gov, amount, RELATIVE_APPROX
     chain.mine(1)
 
     strategy.harvest()
-    
+
     # withdrawal
     vault.withdraw(amount, {"from": user})
     assert (
@@ -56,29 +56,38 @@ def test_emergency_exit(
 
 
 def test_profitable_harvest(
-    strategy, usdc, user, poolToken, gov, amount, RELATIVE_APPROX, vault
+    strategy, usdc, user, poolToken, gov, amount, RELATIVE_APPROX, vault, minichef_strategy, minichef_keeper, minichef_vault
 ):
     # Deposit to the vault
     usdc.approve(vault.address, amount, {"from": user})
     vault.deposit(amount, {"from": user})
     assert usdc.balanceOf(vault.address) == amount
 
+    before_pps = vault.pricePerShare()
+
     # Harvest 1: Send funds through the strategy
     chain.sleep(1)
     strategy.harvest()
+
     assert pytest.approx(strategy.estimatedTotalAssets(), rel=RELATIVE_APPROX) == amount
 
-    # TODO: Add some code before harvest #2 to simulate earning yield
+    minichef_strategy.harvest({"from": minichef_keeper})
+    chain.sleep(86400 * 30)
+    chain.mine(1)
+    minichef_strategy.harvest({"from": minichef_keeper})
+    chain.sleep(86400)
+    chain.mine(1)
 
     # Harvest 2: Realize profit
-    chain.sleep(1)
-    strategy.harvest()
+    tx = strategy.harvest()
+    print(tx.events["Harvested"])
     chain.sleep(3600 * 6)  # 6 hrs needed for profits to unlock
     chain.mine(1)
     profit = usdc.balanceOf(vault.address)  # Profits go to vault
-    # TODO: Uncomment the lines below
-    # assert token.balanceOf(strategy) + profit > amount
-    # assert vault.pricePerShare() > before_pps
+    print(profit)
+    assert vault.pricePerShare() > before_pps
+    
+
 
 
 def test_change_debt(
@@ -133,3 +142,43 @@ def test_triggers(
 
     strategy.harvestTrigger(0)
     strategy.tendTrigger(0)
+
+
+def test_strategy( strategy, usdc, user, poolToken, gov, amount, RELATIVE_APPROX, vault, minichef_strategy, minichef_keeper, minichef_vault, strategist):
+    decimals = usdc.decimals()
+    usdc.approve(vault.address, amount, {"from": user})
+    balanceBefore = usdc.balanceOf(user);
+    vault.deposit(amount, {"from": user})
+    
+    chain.sleep(1)
+    strategy.harvest()
+
+    chain.sleep(86400)
+    chain.mine(1)
+
+    minichef_strategy.harvest({"from": minichef_keeper})
+    chain.sleep(86400 * 30)
+    chain.mine(1)
+    minichef_strategy.harvest({"from": minichef_keeper})
+    chain.sleep(86400)
+    strategy.harvest()
+
+    genericStateOfStrat(strategy, usdc, vault)
+    genericStateOfVault(vault, usdc)
+
+    chain.sleep(21600)
+    chain.mine(1)
+    
+    print("\nEstimated APR: ", "{:.2%}".format(((vault.totalAssets()-2*1e18)*12)/(2*1e18)))
+
+  
+
+    vault.transferFrom(strategy, strategist, vault.balanceOf(strategy), {"from": strategist})
+    print("\nWithdraw")
+
+    vault.withdraw(vault.balanceOf(user), user, 100, {"from": user})
+    # vault.withdraw(vault.balanceOf(strategist), strategist, 100, {"from": strategist})
+
+    balanceAfter = usdc.balanceOf(user)
+    print("Whale profit: ", (usdc.balanceOf(user) - balanceBefore)/1e18)
+    print("Whale profit %: ", "{:.2%}".format(((usdc.balanceOf(usdc) - balanceBefore)/amount)*12))
