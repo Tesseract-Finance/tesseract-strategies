@@ -33,6 +33,7 @@ def test_migration(
     new_strategy = strategist.deploy(
         StrategyCurveaTricrypto,
         vault,
+        gauge,
         strategy_name,
     )
     total_old = strategy.estimatedTotalAssets()

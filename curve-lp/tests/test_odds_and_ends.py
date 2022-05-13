@@ -15,7 +15,7 @@ def test_odds_and_ends(
     strategist_ms,
     voter,
     gauge,
-    StrategyCurveaTricrypto,
+    strategyToDeploy,
     amount,
     pool,
     strategy_name,
@@ -57,8 +57,9 @@ def test_odds_and_ends(
     # we can try to migrate too, lol
     # deploy our new strategy
     new_strategy = strategist.deploy(
-        StrategyCurveaTricrypto,
+        strategyToDeploy,
         vault,
+        gauge,
         strategy_name,
     )
     total_old = strategy.estimatedTotalAssets()
@@ -144,7 +145,7 @@ def test_odds_and_ends_2(
 
 
 def test_odds_and_ends_migration(
-    StrategyCurveaTricrypto,
+    strategyToDeploy,
     gov,
     token,
     vault,
@@ -169,8 +170,9 @@ def test_odds_and_ends_migration(
 
     # deploy our new strategy
     new_strategy = strategist.deploy(
-        StrategyCurveaTricrypto,
+        strategyToDeploy,
         vault,
+        gauge,
         strategy_name,
     )
     total_old = strategy.estimatedTotalAssets()

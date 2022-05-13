@@ -25,8 +25,8 @@ def test_triggers(
     strategy.harvest({"from": gov})
     chain.sleep(1)
 
-    # simulate a day of earnings
-    chain.sleep(86300)
+    # simulate half a day of earnings
+    chain.sleep(43200)
     chain.mine(1)
 
     # harvest should trigger false; hasn't been long enough
